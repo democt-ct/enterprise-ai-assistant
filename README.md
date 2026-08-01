@@ -1,102 +1,126 @@
-<# 企业多专家 Agent 系统
+# Enterprise AI Assistant
 
-企业内部有大量分散的知识（HR 政策、IT 运维手册、法务合规文档、财务报销流程），员工需要花大量时间在多个系统/文档之间切换。本系统构建一个**多专家 Agent 系统**，每个 Agent 拥有独立的知识库和工具集，由 Orchestrator Agent 统一调度。
+面向企业内部员工的 AI 智能助手，覆盖 **HR、IT、法务、财务** 四类常见服务场景。系统将 RAG 知识库、LLM 工具调用和受控业务工作流整合为一个可用的 Web 应用：员工通过自然语言即可完成制度咨询、设备报修、请假、报销等任务。
 
-## 架构概览
+> 这是一个聚焦 AI 应用工程的个人项目：重点不只是“调用模型”，而是让模型能力在企业业务中做到可检索、可控、可追踪、可确认。
 
+## 项目亮点
+
+- **多领域智能协作**：由 Orchestrator 识别问题领域，调度 HR、IT、法务、财务专家；跨领域请求支持并行处理与统一答案整合。
+- **混合 RAG 检索**：每个专家维护独立知识库，结合 Chroma 向量检索、BM25 关键词检索和 RRF 融合，兼顾语义理解与企业制度术语的精确匹配。
+- **受控工具调用**：基于手写 ReAct 循环，Agent 可查询余额、创建工单、提交报销或查询预算；设置调用上限、错误降级和调用记录。
+- **对话式业务办理**：请假场景可从自然语言提取假种、日期和天数；仅追问缺失字段，并在用户确认后才提交申请。
+- **面向生产体验的工程设计**：提供 JWT 鉴权、限流、SSE 流式输出、会话记忆、执行追踪与后台初始化。
+
+## 能解决什么问题？
+
+| 用户输入 | 系统处理方式 |
+| --- | --- |
+| “我今年还剩几天年假？” | 路由至 HR，查询假期余额并返回结果 |
+| “笔记本蓝屏了，帮我报修” | 路由至 IT，检索报修指引并创建工单 |
+| “员工数据能存到境外服务器吗？” | 路由至法务，基于数据保护制度回答 |
+| “我想请 3 天年假，下周一开始” | 提取信息、追问缺失项、生成确认摘要，用户确认后提交 |
+| “请病假，同时电脑需要报修” | HR 与 IT 协同处理，整合为一条清晰回复 |
+
+## 系统架构
+
+```text
+用户 / Web 前端
+       │
+       ▼
+FastAPI API（鉴权、限流、会话、SSE、Trace）
+       │
+       ├── 对话式工作流（请假等固定业务：收集信息 → 确认 → 提交）
+       │
+       ▼
+Orchestrator（规则优先 + LLM 兜底路由）
+       │
+       ├── HR Agent      ── 知识库 + 请假/考勤工具
+       ├── IT Agent      ── 知识库 + 工单/设备工具
+       ├── Legal Agent   ── 知识库 + 合规/合同工具
+       └── Finance Agent ── 知识库 + 报销/预算工具
+       │
+       ▼
+结果整合、审查、记忆与执行追踪
 ```
-用户输入 → Orchestrator Agent (路由/编排)
-               ├── HR Agent    (人事制度/考勤/请假)
-               ├── IT Agent    (设备/报修/工单)
-               ├── 法务 Agent   (合规/合同/数据保护)
-               └── 财务 Agent   (报销/预算/采购)
-```
 
-## 快速开始
+## 核心流程
 
-```bash
-# 安装依赖
-poetry install
-
-# 配置 API Key
-cp .env.example .env
-# 编辑 .env，填入 LLM_API_KEY
-
-# 本地启动（双击或命令行）
-scripts\start_local.bat
-# 浏览器打开 http://127.0.0.1:8080
-
-# 内网穿透（公网访问）
-scripts\start_tunnel.bat
-```
-
-## 项目结构
-
-```
-src/
-├── main.py              # CLI 入口
-├── api/                 # FastAPI + SSE 流式路由
-├── agents/              # Agent 实现 (BaseAgent + Orchestrator + Planner)
-├── protocol/            # 协议层 (AgentRequest/Response/交割)
-├── rag/                 # RAG Pipeline (加载/分块/检索/重排序)
-├── tools/               # 工具定义 (HR/IT/法务/财务 mock 工具)
-├── memory/              # 短期记忆 (L2) + 长期记忆 (L3)
-├── gateway/             # JWT 认证 + 限流
-├── evaluation/          # 评估体系
-├── observability/       # 执行追踪
-└── config.py            # 集中配置
-frontend/                # 前端 (HTML/CSS/JS 单页应用)
-data/                    # 知识库原始文档 + SQLite 业务库
-chroma_db/               # Chroma 向量索引持久化
-scripts/                 # 辅助脚本
-```
+1. 用户在聊天界面发送自然语言请求。
+2. 系统优先识别是否属于确定性的业务工作流；例如请假会进入“信息收集 → 确认 → 提交”流程。
+3. 其他问题由 Orchestrator 按“寒暄检测 → 关键词规则 → LLM 结构化路由”识别主专家与协作专家。
+4. 专家 Agent 从所属知识库检索证据，必要时执行受控工具调用。
+5. 跨领域任务并行执行或交接处理，最终由整合器生成无重复的用户答案。
+6. 系统记录工具调用、检索片段和 Trace，便于复盘与调试。
 
 ## 技术栈
 
-| 层 | 技术 | 说明 |
-|----|------|------|
-| 语言 | Python ≥3.11 | |
-| LLM | DeepSeek (兼容 OpenAI SDK) | 支持 thinking mode 推理链 |
-| Agent 编排 | 手写 ReAct + LangGraph | query 模式单次调用，action 模式多轮工具调用 |
-| Embedding | BGE-large-zh-v1.5 | 1024 维，ModelScope/HF 自动下载 |
-| 向量库 | Chroma (持久化) | 零配置内嵌运行 |
-| 关键词检索 | BM25 (rank-bm25 + jieba) | 与向量检索 RRF 融合 |
-| 重排序 | Cohere Rerank / BGE Cross-Encoder | 可配置切换 |
-| 前端 | 原生 HTML/CSS/JS | FastAPI StaticFiles 托管，SSE 流式推送 |
-| 文档加载 | pypdf + python-docx | |
+| 模块 | 技术 |
+| --- | --- |
+| 后端服务 | Python、FastAPI、SSE |
+| 大模型 | DeepSeek API（OpenAI SDK 兼容接口） |
+| RAG | ChromaDB、向量检索、BM25、RRF 融合、可选重排序 |
+| 数据与业务工具 | SQLite、Mock 企业业务工具 |
+| 安全与可观测性 | JWT、限流、Trace、会话记忆 |
+| 前端与部署 | 原生 HTML/CSS/JavaScript、Docker、Docker Compose |
 
----
+## 评估
 
-## 启动优化
+项目内置离线评测脚本和测试集，用于检查路由、检索及工具调用链路。
 
-启动流程经过三轮优化，从「阻塞等待 15 秒」降到「2 秒可访问、后台预热」：
+- 最新路由报告：20 条测试样本中主路由命中 19 条，**主路由准确率 95%**。
+- 当前跨领域测试样本数量有限，仍是后续重点优化项；因此该指标不等同于真实生产环境效果。
 
-### 优化历程
+运行路由评测：
 
-| 版本 | 方式 | 首屏时间 | 首条查询延迟 | 问题 |
-|------|------|---------|-------------|------|
-| v0 | `_init_engine()` 同步阻塞 lifespan | 8-15s | 即时 | 页面白屏等待 |
-| v1 | daemon 线程后台初始化 | 2s | 2-5s | 首条查询触发 BGE 模型懒加载 |
-| v2 | 后台初始化 + 预加载 Embedding 模型 | 2s | 即时 | ✅ 当前版本 |
-
-### 技术细节
-
-```
-FastAPI lifespan
-  ├─ 立即 yield（2s 内页面可访问）
-  └─ 后台线程 _init_engine:
-       ├─ bootstrap_company_workspace()   # SQLite DDL
-       ├─ 串行加载 4 个 KB                 # Chroma + BM25 (ChromaDB 不支持并发 PersistentClient)
-       ├─ Orchestrator + ToolAgent + ReviewAgent + Memory
-       ├─ embedder.model                 # 🔥 预加载 1.3GB BGE 模型
-       └─ state.ready.set()             # 标记就绪
+```cmd
+python scripts\run_eval.py --routing-only
 ```
 
-关键设计决策：
+## 本地运行
 
-- **非阻塞 lifespan**：FastAPI 先 accept 请求，初始化在后台线程跑。就绪前 `/api/chat` 返回 503 + `"引擎尚未初始化完成"`，`/api/health` 返回 `status: "initializing"` + 进度百分比。
-- **串行加载 KB**：ChromaDB 底层 SQLite 不支持多个 `PersistentClient` 并发访问同一目录，因此 4 个 KB 串行加载。实际瓶颈不在 KB I/O（合计 <1s），而在 Embedding 模型加载。
-- **预加载 Embedding 模型**：`SentenceTransformer("BAAI/bge-large-zh-v1.5")` 首次加载 1.3GB 权重需 2-5 秒。在 init 线程末尾显式触发 `embedder.model` 完成预热，避免第一条用户查询等待。
-- **`Embedder.model` 双重检查锁**：`threading.Lock` + double-check 保证多线程环境下模型只初始化一次。
-- **异常兜底**：`_init_engine` 外层 `try/except` 捕获全部异常并写入 `init_progress.error`，避免 daemon 线程静默死亡导致永久 503。
+### 1. 准备环境
 
+```cmd
+poetry install
+copy .env.example .env
+```
+
+在 `.env` 中配置模型服务密钥：
+
+```env
+LLM_API_KEY=your_key_here
+```
+
+### 2. 启动应用
+
+```cmd
+scripts\start_local.bat
+```
+
+浏览器访问 `http://127.0.0.1:8080`。
+
+应用采用后台初始化：页面可先访问，知识库和 Embedding 模型在后台加载；引擎未就绪时，接口会明确返回初始化状态，而不是阻塞页面。
+
+## 项目结构
+
+```text
+src/
+├── agents/          # Orchestrator、专家 Agent、Planner、Review
+├── api/             # FastAPI 路由与聊天服务
+├── rag/             # 文档加载、分块、混合检索、重排序
+├── tools/           # HR / IT / 法务 / 财务业务工具
+├── workflow/        # 工作流引擎与对话式请假流程
+├── memory/          # 会话与长期记忆
+├── observability/   # Trace 追踪
+└── gateway/         # JWT、限流与输入安全
+frontend/            # Web 聊天界面
+data/                # 模拟企业制度文档与本地业务数据
+scripts/             # 启动、评测、维护脚本
+```
+
+## 说明
+
+- 本项目使用模拟企业数据和 Mock 工具，适合作为 AI 应用工程实践与作品集展示。
+- 涉及写操作的业务请求均要求用户确认；模型不会直接静默提交请假、报销或工单。
+- 更多设计资料见 [`docs/`](docs/)；请勿提交真实 API Key、员工数据或生产凭据。
