@@ -102,6 +102,19 @@ scripts\start_local.bat
 
 应用采用后台初始化：页面可先访问，知识库和 Embedding 模型在后台加载；引擎未就绪时，接口会明确返回初始化状态，而不是阻塞页面。
 
+## 公网演示（Cloudflare Tunnel）
+
+项目支持通过 Cloudflare Tunnel 将本地服务暴露为 HTTPS 公网地址，方便面试或远程演示：
+
+```cmd
+scripts\start_tunnel.bat
+```
+
+- 临时模式会生成随机的 `*.trycloudflare.com` 地址，适合快速分享；
+- 固定域名模式需要配置 Cloudflare 账号和已托管域名。
+
+> 公网隧道依赖本地服务持续运行；临时地址会在服务停止后失效。
+
 ## 项目结构
 
 ```text
