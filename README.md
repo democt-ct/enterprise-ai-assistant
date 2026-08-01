@@ -27,34 +27,18 @@
 ```mermaid
 flowchart TB
     UI[Web 对话界面] --> API[FastAPI API / SSE]
-    API --> Guard[JWT 鉴权、限流、会话与执行追踪]
-    Guard --> Decision{是否属于固定业务流程？}
+    API --> Core{请求处理方式}
 
-    Decision -->|是| Workflow[对话式工作流<br/>信息收集 → 用户确认 → 提交]
-    Decision -->|否| Router[Orchestrator<br/>规则优先 + LLM 兜底路由]
+    Core -->|固定业务| Workflow[对话式工作流<br/>收集信息 → 用户确认 → 提交]
+    Core -->|智能咨询与协作| Router[Orchestrator<br/>路由与多专家协作]
 
-    Router --> HR[HR Agent]
-    Router --> IT[IT Agent]
-    Router --> Legal[Legal Agent]
-    Router --> Finance[Finance Agent]
+    Router --> Experts[HR · IT · 法务 · 财务专家]
+    Experts --> Capability[混合 RAG 检索 + 受控业务工具]
+    Workflow --> Capability
 
-    HR --> RAG[专家知识库 / 混合 RAG]
-    IT --> RAG
-    Legal --> RAG
-    Finance --> RAG
-    RAG --> Chroma[(ChromaDB 向量库)]
-    RAG --> BM25[BM25 + RRF 融合]
-
-    HR --> Tools[受控业务工具<br/>请假、工单、合同、报销与预算]
-    IT --> Tools
-    Legal --> Tools
-    Finance --> Tools
-    Workflow --> Tools
-
-    Tools --> Result[结果整合、审查与会话记忆]
-    RAG --> Result
-    Result --> API
-    API --> SQLite[(SQLite)]
+    Capability --> Data[(ChromaDB / SQLite)]
+    Capability --> Result[结果整合、会话记忆与执行追踪]
+    Result --> UI
 ```
 
 ## 核心流程
