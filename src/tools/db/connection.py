@@ -32,7 +32,8 @@ _DATA_DIR = _PROJECT_ROOT / "data"
 # 环境隔离:dev → dev.db, production → enterprise.db
 _APP_ENV = os.getenv("APP_ENV", "dev")
 _DB_FILENAME = "dev.db" if _APP_ENV == "dev" else "enterprise.db"
-_DB_PATH = _DATA_DIR / _DB_FILENAME
+_DB_OVERRIDE = os.getenv("APP_DB_PATH", "").strip()
+_DB_PATH = Path(_DB_OVERRIDE).resolve() if _DB_OVERRIDE else _DATA_DIR / _DB_FILENAME
 
 # 连接超时(秒)-- 写锁等待
 _BUSY_TIMEOUT_MS = 5000

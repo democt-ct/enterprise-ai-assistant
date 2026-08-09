@@ -66,6 +66,7 @@ class WorkflowEngine:
         history: list[dict] | None = None,
         session_id: str = "default",
         on_step: Any = None,
+        read_only: bool = False,
     ) -> WorkflowResult:
         """执行一个 Plan DAG.
 
@@ -75,13 +76,14 @@ class WorkflowEngine:
             history: 对话历史
             session_id: 会话 ID
             on_step: 可选回调 (step_id, result) → None
+            read_only: 为 True 时禁止 Planner 节点获得工具调用能力
         """
         result = WorkflowResult()
         t0 = time.perf_counter()
 
         # 单任务快速路径
         if not plan.is_complex or len(plan.subtasks) <= 1:
-            return self._run_single(plan, session_ctx, history, on_step, t0)
+            return self._run_single(plan, session_ctx, history, on_step, t0, read_only)
 
         # 创建 task_state 记录
         order = plan.topological_order()
@@ -135,7 +137,7 @@ class WorkflowEngine:
             if len(ready) == 1:
                 # 单节点:直接执行,省去线程开销
                 task = ready[0]
-                step_result = self._execute_node(task, session_ctx, history)
+                step_result = self._execute_node(task, session_ctx, history, read_only)
                 step_results[task.id] = step_result
                 completed.add(task.id)
                 pending.discard(task.id)
@@ -147,7 +149,7 @@ class WorkflowEngine:
             else:
                 with concurrent.futures.ThreadPoolExecutor(max_workers=len(ready)) as executor:
                     future_map = {
-                        executor.submit(self._execute_node, task, session_ctx, history): task
+                        executor.submit(self._execute_node, task, session_ctx, history, read_only): task
                         for task in ready
                     }
                     for future in concurrent.futures.as_completed(future_map):
@@ -197,7 +199,7 @@ class WorkflowEngine:
 
         return result
 
-    def _run_single(self, plan: Plan, session_ctx, history, on_step, t0) -> WorkflowResult:
+    def _run_single(self, plan: Plan, session_ctx, history, on_step, t0, read_only=False) -> WorkflowResult:
         """单任务快速路径 -- 直接调 Agent."""
         result = WorkflowResult()
         task = plan.subtasks[0]
@@ -208,7 +210,7 @@ class WorkflowEngine:
             except Exception:
                 pass
 
-        step_result = self._execute_node(task, session_ctx, history)
+        step_result = self._execute_node(task, session_ctx, history, read_only)
         result.answer = step_result.get("answer", "")
         result.steps = [{"task_id": task.id, "result": step_result}]
         result.status = "completed" if not step_result.get("error") else "failed"
@@ -216,7 +218,11 @@ class WorkflowEngine:
         return result
 
     def _execute_node(
-        self, task: SubTask, session_ctx: Any, history: list[dict] | None
+        self,
+        task: SubTask,
+        session_ctx: Any,
+        history: list[dict] | None,
+        read_only: bool = False,
     ) -> dict:
         """执行单个 DAG 节点.
 
@@ -229,12 +235,12 @@ class WorkflowEngine:
         """
         for attempt in range(self.max_retries + 1):
             try:
-                if task.agent == "tool":
+                if task.agent == "tool" and not read_only:
                     return self._execute_as_tool(task, session_ctx)
                 elif task.agent == "memory":
                     return self._execute_as_memory(task, session_ctx)
                 else:
-                    return self._execute_as_agent(task, session_ctx, history)
+                    return self._execute_as_agent(task, session_ctx, history, read_only)
             except Exception as e:
                 if attempt < self.max_retries:
                     logger.warning("Task %s attempt %d failed: %s -- retrying", task.id, attempt + 1, e)
@@ -303,7 +309,13 @@ class WorkflowEngine:
             "task_id": task.id,
         }
 
-    def _execute_as_agent(self, task: SubTask, session_ctx: Any, history: list[dict] | None) -> dict:
+    def _execute_as_agent(
+        self,
+        task: SubTask,
+        session_ctx: Any,
+        history: list[dict] | None,
+        read_only: bool = False,
+    ) -> dict:
         """通用 Agent 节点 -- 完整 ReAct 执行."""
         domain_map = {
             "hr": "hr_agent", "it": "it_agent",
@@ -321,7 +333,8 @@ class WorkflowEngine:
             agent_name=agent_key,
             conversation_history=history or [],
             max_tool_calls=3,
-            temperature=0.5,
+            temperature=0.1 if read_only else 0.5,
+            intent="query" if read_only else "action",
         )
         resp = agent.run(req)
         return {

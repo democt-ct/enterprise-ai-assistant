@@ -1,19 +1,17 @@
-# Enterprise AI Assistant
+# Enterprise Service Collaboration Hub
 
-面向企业内部员工的 AI 智能助手，覆盖 **HR、IT、法务、财务** 四类常见服务场景。系统将多 Agent 路由、混合 RAG 知识库、受控工具调用和业务工作流整合为一个可用的 Web 工作台：员工通过自然语言即可完成制度咨询、设备报修、请假申请、费用报销、审批处理等任务。
+面向企业内部员工的 AI 事务协同中枢。用户从自然语言发起一个可追踪的 `Case`；系统根据任务的不确定性选择协作策略，组织 HR、IT、法务、财务等领域能力，并将外部写操作交给受控工作流与审批网关。
 
-> 这是一个聚焦 AI 应用工程的个人项目：重点不只是“调用模型”，而是让模型能力在企业业务中做到可检索、可控、可追踪、可确认。
+> 这不是把固定流程套上模型，也不是四个聊天机器人轮流回答。项目重点是把 **Agent 决策** 与 **Workflow 执行** 组合起来：前者负责理解目标、选择专家和整合跨领域信息；后者负责确定性步骤、人工确认与外部写操作。
 
-## 项目亮点
+## 核心能力
 
-- **四级路由，确定性优先**：寒暄检测 → 关键词规则 → 短应答上下文推断 → LLM 结构化兜底；高频意图 0 token 完成路由，并支持否定句过滤、多领域消歧和主 / 协作专家选择。
-- **多领域专家协作**：Orchestrator 调度 HR、IT、法务、财务四个领域 Agent，各专家拥有独立知识库与工具集；跨领域请求支持上下文交接（Handoff）与答案整合。
-- **混合 RAG 管线**：FAQ 快速路径 → LLM 查询改写 → Chroma 向量检索 + BM25 关键词检索 → RRF 融合 → 可选 Cross-Encoder 重排 → 结果缓存与失败降级。
-- **受控工具调用**：手写 ReAct 循环，query / action 双模式执行；工具调用统一经 Tool Agent 做参数净化、权限校验和审计，并设置调用上限、超时与错误降级。
-- **对话式业务办理**：请假、报销、报修、打卡、加班、出差等场景返回可交互操作卡片，仅追问缺失字段，用户确认后才提交；审批流转由状态机严格约束。
-- **Planner + DAG 工作流**：复杂多意图请求由 Planner 拆解为 DAG，工作流引擎按拓扑序调度，支持并行执行、超时重试、失败降级与状态落库。
-- **Skills 复合业务层**：在原子工具之上沉淀审批引擎、工单全生命周期、通知中心与聚合报表等可复用业务能力。
-- **面向生产体验的工程设计**：JWT 双 Token 鉴权、限流、输入净化、三层记忆、Review Agent 幻觉审查、SSE 流式输出、Trace 全链路追踪、后台初始化与 Docker 部署。
+- **Case 优先**：跨部门请求自动沉淀为可恢复的 Case，前端按“部门任务 / 可共享结论 / 待我确认”展示进度；私有 Artifact 不会出现在员工视图。
+- **受限动态协作**：Case Manager 将路由结果转换为运行时任务图，Case Runtime 统一管理工作区、持久化和失败阻塞；跨领域任务并行产出结构化 Artifact，未知专家与未声明资源会被拒绝。
+- **Agent 决策 + Workflow 执行**：Agent 负责理解目标、选择专家、整合证据；所有专家工具调用统一经过 Resource Gateway，写工具只生成 Operation Proposal，确定性写入由确认、审批和执行网关完成。
+- **三域资源隔离**：专家 Pod 持有私有知识和工具白名单；共享区只保存最小上下文与 Artifact；外部知识库、Mock 企业系统和审批网关通过资源注册表接入。
+- **混合 RAG 与可观测性**：领域问答采用向量检索、BM25、RRF 融合与重排；SSE、Trace、JWT、限流和输入净化作为运行支撑能力。
+- **可验证边界**：路由、协作策略、私有产物隔离、状态机和入职闭环均有离线测试；涉及外部操作的连接器目前为 Mock 实现。
 
 ## 能解决什么问题？
 
@@ -26,49 +24,62 @@
 | “帮我审批一下待办申请” | 进入审批流程，展示待审批列表与通过 / 驳回操作 |
 | “请病假，同时电脑需要报修” | HR 与 IT 协同处理，整合为一条清晰回复 |
 
+## 为什么既有 Agent 又有 Workflow？
+
+| 请求特征 | 协作策略 | Agent 的职责 | Workflow 的职责 |
+| --- | --- | --- | --- |
+| 问题边界清晰、无需写入 | 单专家知识问答 | 选择专家、检索并组织带证据的回答 | 不介入 |
+| 涉及多个领域、需要统一建议 | 专家作为能力调用 | 并行调用专家，收集并整合 Artifact | 不介入 |
+| 某领域需要多轮补充资料 | Handoff | 将对话暂时交给对应专家，并保持 Case 上下文 | 管理可恢复的领域状态 |
+| 字段、规则与写入目标明确 | 确定性业务办理 | 提取字段、识别缺失信息、解释下一步 | 校验、确认、审批、执行与失败恢复 |
+
+入职协同、离职协同、请假、报销和设备支持都是同一协作内核上的 Case 模板。模板只声明业务状态与受控资源，**不预先写死由哪些 Agent 参与或如何生成跨领域结论**。
+
 ## 系统架构
 
 ```mermaid
 flowchart TB
-    UI["Web 工作台<br/>对话 · 我的申请 · 待审批 · 通知 · 追踪 · 管理后台"] --> GW["Gateway 安全网关<br/>JWT 鉴权 · 限流 · 输入净化"]
-    GW --> API["FastAPI / SSE"]
+    UI[Web 工作台] --> Case[Case 案例中心]
 
-    API --> Core{"请求处理方式"}
-    Core -->|"寒暄 / 关键词 / 上下文"| Quick["规则路由<br/>0 token 命中"]
-    Core -->|"LLM 兜底"| LLMRoute["LLM 结构化路由<br/>JSON + Pydantic 校验"]
-    Quick --> Router["Orchestrator<br/>主专家 + 协作专家 + 意图分类"]
-    LLMRoute --> Router
+    subgraph Shared[共享协作区]
+        Case --> Policy[协作策略<br/>路由 · 任务图 · 权限]
+        Policy --> Workspace[任务工作区<br/>最小上下文 · Artifact · 审批状态]
+        Workspace --> Composer[结果整合与 SSE]
+    end
 
-    Router --> Experts["HR · IT · 法务 · 财务专家 Agent"]
-    Experts --> RAG["混合 RAG 管线<br/>改写 → 向量 + BM25 → RRF → 重排"]
-    Experts --> Tools["Tool Agent<br/>权限校验 · 审计 · ReAct 调用"]
-    RAG --> Data[("ChromaDB / SQLite")]
-    Tools --> Data
-    RAG --> Review["Review Agent<br/>规则 + LLM 双重审查"]
-    Tools --> Review
-    Review --> SSE["SSE 流式输出"]
-    SSE --> UI
+    subgraph Experts[专属专家区]
+        Pods[HR · IT · 法务 · 财务 Expert Pods<br/>领域规则 · 私有知识 · 工具白名单]
+    end
 
-    Planner["Planner → DAG 工作流引擎"] -.-> Experts
-    Memory["三层记忆 L1 / L2 / L3"] -.-> Experts
-    Trace["Trace 全链路追踪"] -.-> API
-    Eval["离线评测 golden set"] -.-> Router
+    subgraph Resources[外挂资源区]
+        External[知识源 · HRIS · ITSM · 报销 · 合同系统]
+        Approval[统一审批与执行网关]
+    end
+
+    Policy --> Pods
+    Pods --> Workspace
+    Pods --> External
+    Workspace --> Approval
+    Approval --> External
+    Composer --> UI
 ```
+
+专家不再直接共享完整对话或写入外部系统：跨领域协作只共享脱敏后的 Artifact；写操作必须先形成操作提案，再经过统一审批与执行网关。
 
 ## 核心流程
 
-1. 用户在 Web 工作台发送自然语言请求，经 Gateway 完成 JWT 鉴权、限流与输入净化。
-2. Orchestrator 按“寒暄 → 关键词 → 上下文 → LLM”四级路由识别主专家、协作专家与意图（query / action）；高频意图由规则直接命中，0 token 消耗。
-3. 复杂多意图请求由 Planner 拆解为 DAG，工作流引擎按拓扑顺序调度执行。
-4. 专家 Agent 从所属知识库混合检索证据（向量 + BM25 + RRF，可选重排），必要时进入 ReAct 工具调用循环。
-5. 工具调用统一经 Tool Agent 做权限校验与审计；写操作先生成确认卡片，用户确认后才提交。
-6. 跨领域任务通过 Handoff 上下文交接，由整合器生成无重复的回答；Review Agent 对数值与制度引用做规则 + LLM 双重审查。
-7. 结果通过 SSE 流式推送（routing → retrieval → tool_call → reasoning → answer）。
-8. 全链路事件写入 Trace，便于复盘与调试；离线评测集持续回归路由、检索与工具调用质量。
+1. 用户请求先经过 JWT 鉴权、限流和输入净化，再进入领域路由。
+2. Orchestrator 按“寒暄 → 关键词 → 上下文 → LLM”识别主专家与协作专家。
+3. 执行分类器根据路由结果选择知识问答、确定性工作流或跨领域协作，选择原因写入 Trace。
+4. 知识问答固定使用只读检索；业务办理由状态机收集字段并在用户确认后提交。
+5. 跨领域查询并行调用多个专家并统一整合；跨领域写请求只返回建议和确认入口，不直接调用写工具。
+6. Planner 仅处理无需确认的只读复杂查询；结果连同 Trace 通过 SSE 返回前端。
 
 ## 前端工作台
 
 - 对话：SSE 流式对话、操作卡片、会话历史
+- 事务中心：Case 列表、任务依赖、可共享专家结论和操作确认入口
+- 入职演示：确认日期与岗位后生成 IT 账号设备、NDA、薪资主体三个操作提案；确认与 HR/管理员审批后，仅执行可审计的 Mock 连接器并收敛 Case 状态
 - 我的申请 / 待审批：请假、报销、工单等申请与审批进度
 - 通知：审批结果、待办提醒
 - 执行追踪：可视化每次请求的路由、检索与工具调用
@@ -82,7 +93,7 @@ flowchart TB
 | 大模型 | DeepSeek API（OpenAI SDK 兼容，支持 reasoning） |
 | RAG | ChromaDB + BGE Embedding、BM25（jieba 分词）、RRF 融合、查询改写、可选 BGE Cross-Encoder 重排、缓存 |
 | 数据与业务 | SQLite（WAL）、Mock 企业业务工具、Skills（审批 / 工单 / 通知 / 报表） |
-| Agent 编排 | 手写 ReAct、Orchestrator 四级路由、Planner + DAG 工作流、Review Agent、三层记忆 |
+| Agent 编排 | 手写 ReAct、领域路由、执行模式分类、Case Manager、只读 Planner + DAG |
 | 安全与可观测性 | JWT 双 Token、Token Bucket 限流、输入净化、Trace JSONL |
 | 前端与部署 | 原生 HTML/CSS/JavaScript 工作台 + 管理后台、Docker、Docker Compose、Cloudflare Tunnel |
 
@@ -100,7 +111,12 @@ python scripts\run_eval.py --routing-only      :: 仅路由（秒级，不调用
 python scripts\run_eval.py --retrieval-only    :: 路由 + 检索
 python scripts\run_eval.py                     :: 完整评估（路由 + Agent 执行）
 python scripts\run_eval.py --output report.json
+python scripts\run_collaboration_eval.py             :: 协作策略与安全边界回归评测
+python scripts\run_case_eval.py                      :: Case 闭环与审批/隐私边界评测
+python scripts\run_api_case_e2e.py                   :: 临时数据库上的登录与 Case API 端到端验证
 ```
+
+评测分为三层：领域路由、协作策略、Case 生命周期与安全边界。它们使用离线样本和 Mock 资源，衡量的是当前实现的回归质量，不等同于真实生产环境效果。
 
 ## 本地运行
 
@@ -150,8 +166,9 @@ src/
 ├── api/             # FastAPI 路由、SSE 聊天、Trace 中间件
 ├── rag/             # 文档加载、分块、Embedding、混合检索、查询改写、重排序
 ├── tools/           # HR / IT / 法务 / 财务业务工具 + SQLite 数据层（schema / seed / queries）
-├── workflow/        # DAG 工作流引擎、事件总线、审批状态机、请假对话流
-├── skills/          # 复合业务层：审批引擎、工单生命周期、通知中心、聚合报表
+├── workflow/        # 请求执行分类、DAG 引擎、事件总线、审批状态机、请假对话流
+├── collaboration/   # Case Manager/Runtime、工作区、专家与资源注册、Artifact 契约
+├── skills/          # 历史业务复合能力（审批/工单/通知），逐步收敛为资源适配器
 ├── memory/          # 三层记忆（会话窗口 / SQLite 持久化 / 长期事实）
 ├── observability/   # Trace 采集与存储
 ├── evaluation/      # 离线评测（路由 / 检索 / 工具）
@@ -167,4 +184,5 @@ docs/                # 架构、接口协议、面试讲解等设计文档
 
 - 本项目使用模拟企业数据和 Mock 工具，适合作为 AI 应用工程实践与作品集展示。
 - 涉及写操作的业务请求均要求用户确认；模型不会直接静默提交请假、报销或工单。
-- 更多设计资料见 [`docs/`](docs/)（整体设计、系统架构、接口协议、面试技术文档）；请勿提交真实 API Key、员工数据或生产凭据。
+- 跨专家咨询在登录态下会自动生成 `cross_domain_consultation` Case；也可通过 `POST /api/cases` 基于 `employee_onboarding` 模板创建入职协同事项。
+- 设计入口见 [`docs/README.md`](docs/README.md)：优先阅读产品交互、协作架构、基线对比和面试讲解；请勿提交真实 API Key、员工数据或生产凭据。

@@ -1,0 +1,6 @@
+[
+  {"id":"single_hr_policy","query":"年假规则是什么？","route":{"primary":"hr_agent","secondary":null,"method":"keyword","action_card":null},"expected_mode":"knowledge"},
+  {"id":"parallel_it_finance","query":"出差设备坏了，替换后能报销吗？","route":{"primary":"it_agent","secondary":"finance_agent","method":"keyword","action_card":null},"expected_mode":"collaboration","expected_participants":["it_agent","finance_agent"],"expect_read_only":true},
+  {"id":"cross_domain_write_safe","query":"请假同时帮我报修电脑","route":{"primary":"hr_agent","secondary":"it_agent","method":"keyword","action_card":{"type":"leave_form"}},"expected_mode":"collaboration","expected_participants":["hr_agent","it_agent"],"expect_read_only":true},
+  {"id":"registered_workflow","query":"帮我提交报销","route":{"primary":"finance_agent","secondary":null,"method":"keyword","action_card":{"type":"expense_form"}},"expected_mode":"workflow"}
+]

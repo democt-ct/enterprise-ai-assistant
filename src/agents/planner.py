@@ -72,15 +72,16 @@ PLANNER_SYSTEM_PROMPT = """你是一个任务 DAG 规划专家.分析用户问�
 
 ## 规则
 1. 单领域简单问题 → is_complex: false, subtasks 只有一条
-2. 跨领域或多步骤问题 → is_complex: true, 拆为多条
+2. 跨领域只读问题 → is_complex: true, 拆为多条
 3. 每个 subtask 必须有唯一 id(如 t1, t2, t3)
 4. agent 字段表示执行者:
    - retrieval: 需要查制度文档(RAG 检索)
-   - tool: 需要调工具(查余额,提交审批等)
+   - tool: 需要调用只读工具(查询余额、状态等)
    - memory: 需要读取用户状态
    - review: 最终审查(始终是最后一个节点)
 5. depends_on 列出必须先完成的 subtask id 列表
-6. 拆解时考虑:先获取信息(检索+状态),再执行操作(工具),最后审查
+6. 不得规划申请、提交、创建、修改、删除、审批等写操作;这类任务由确定性工作流处理
+7. 拆解时考虑:先获取信息(检索+状态),再综合结果,最后审查
 
 ## 领域判断
 - hr: 人事,请假,考勤,薪酬,社保
@@ -89,23 +90,19 @@ PLANNER_SYSTEM_PROMPT = """你是一个任务 DAG 规划专家.分析用户问�
 - finance: 报销,预算,采购,出差
 
 ## 示例
-用户: 我请年假6月1号到3号
+用户: 请比较年假制度和出差报销制度,并告诉我分别要准备什么
 
 输出:
 {
   "is_complex": true,
   "subtasks": [
-    {"id":"t1","query":"查询当前登录用户的身份和假期余额","domain":"hr","agent":"memory","depends_on":[]},
-    {"id":"t2","query":"查询年假请假制度和审批流程","domain":"hr","agent":"retrieval","depends_on":[]},
-    {"id":"t3","query":"请假制度合规检查:当前登录用户请年假3天是否满足条件","domain":"hr","agent":"tool","depends_on":["t1","t2"]},
-    {"id":"t4","query":"提交请假申请并生成审批流","domain":"hr","agent":"tool","depends_on":["t3"]},
-    {"id":"t5","query":"审查整个请假流程结果是否正确","domain":"hr","agent":"review","depends_on":["t4"]}
+    {"id":"t1","query":"查询年假制度和所需材料","domain":"hr","agent":"retrieval","depends_on":[]},
+    {"id":"t2","query":"查询出差报销制度和所需材料","domain":"finance","agent":"retrieval","depends_on":[]},
+    {"id":"t3","query":"综合比较两项制度并检查是否遗漏关键条件","domain":"hr","agent":"review","depends_on":["t1","t2"]}
   ],
   "dependencies": {
-    "t1→t3":"需要先知道用户身份和余额才能做合规检查",
-    "t2→t3":"需要先检索制度才能判断合规",
-    "t3→t4":"合规通过后才能提交",
-    "t4→t5":"提交后审查结果"
+    "t1→t3":"需要先取得年假制度依据",
+    "t2→t3":"需要先取得报销制度依据"
   }
 }
 

@@ -22,6 +22,9 @@
         <button class="nav-item" data-panel="apps" title="我的申请" aria-label="我的申请">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
         </button>
+        <button class="nav-item" data-panel="cases" title="事务中心" aria-label="事务中心">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M7 12h6M7 16h4"/></svg>
+        </button>
         <button class="nav-item" data-panel="approvals" title="待审批" aria-label="待审批">
           <span class="nav-badge hidden" id="approval-nav-badge">0</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
@@ -107,6 +110,17 @@
           <button class="chip-btn" data-app-filter="ticket">IT 工单</button>
         </div>
         <div class="panel-list" id="apps-list"><div class="empty-hint">登录后查看你的申请记录。</div></div>
+      </section>
+
+      <section class="panel hidden" id="panel-cases">
+        <div class="panel-header">
+          <div><p class="eyebrow">Case Center</p><h1>事务中心</h1><p>查看跨部门事项的进度、专家结论与待确认操作。</p></div>
+          <div class="panel-header-actions"><button class="panel-secondary-btn" id="btn-refresh-cases">刷新</button><button class="panel-primary-btn" id="btn-open-onboarding">新建入职协同</button></div>
+        </div>
+        <div class="case-workbench">
+          <div class="case-list" id="case-list"><div class="empty-hint">登录后查看进行中的事务。</div></div>
+          <article class="case-detail" id="case-detail"><div class="empty-hint">选择一项事务查看详情。</div></article>
+        </div>
       </section>
 
       <section class="panel hidden" id="panel-approvals">
@@ -196,6 +210,23 @@
     </div>
   </div>
 
+  <div class="modal-overlay hidden" id="onboarding-modal">
+    <div class="modal-dialog leave-dialog">
+      <h2>新建入职协同</h2>
+      <p class="modal-hint">资料确认后，系统将创建 IT、法务和财务操作提案，等待你确认与审批。</p>
+      <label>入职日期</label>
+      <input id="onboarding-start-date" type="date">
+      <label>岗位</label>
+      <input id="onboarding-position" type="text" maxlength="80" placeholder="例如：后端开发工程师">
+      <label>部门</label>
+      <input id="onboarding-department" type="text" maxlength="80" placeholder="例如：工程部">
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" id="onboarding-cancel">取消</button>
+        <button class="modal-btn modal-btn-confirm" id="onboarding-submit">创建并确认资料</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script type="module" src="/app.js"></script>
   <script type="module">
@@ -236,6 +267,7 @@
         $$('.nav-item[data-panel]').forEach(b => b.classList.toggle('active', b.dataset.panel === name));
         $$('.content-area > .panel').forEach(p => p.classList.toggle('hidden', p.id !== 'panel-' + name));
         if (name === 'apps') loadApps();
+        if (name === 'cases') loadCases();
         if (name === 'approvals') loadApprovals();
         if (name === 'notifs') loadNotifications();
         if (name === 'traces') loadTraces();
@@ -297,6 +329,10 @@
         $('#user-popup-grid').innerHTML = '';
         syncUserUI();
         if (window.__reloadSessions) window.__reloadSessions();
+        const caseList = $('#case-list');
+        const caseDetail = $('#case-detail');
+        if (caseList) caseList.innerHTML = '<div class="empty-hint">登录后查看进行中的事务。</div>';
+        if (caseDetail) caseDetail.innerHTML = '<div class="empty-hint">选择一项事务查看详情。</div>';
       }
 
       async function loadApps(){
@@ -549,6 +585,110 @@
       }
       window.updateAppStatus = updateAppStatus;
 
+      let activeCaseId = '';
+      const CASE_STATUS = {
+        draft: '草稿', collecting: '待补充', planned: '已规划', coordinating: '协同处理中',
+        waiting_input: '等待补充', waiting_approval: '等待审批', blocked: '已阻塞',
+        completed: '已完成', cancelled: '已取消',
+      };
+      const TASK_STATUS = {
+        not_started: '未开始', in_progress: '进行中', waiting_input: '等待补充',
+        waiting_dependency: '等待前序任务', waiting_approval: '等待审批',
+        blocked: '已阻塞', completed: '已完成', cancelled: '已取消',
+      };
+
+      async function loadCases(){
+        const list = $('#case-list');
+        if (!window.__authToken) { list.innerHTML = '<div class="empty-hint">请先登录后查看事务中心。</div>'; return; }
+        list.innerHTML = '<div class="empty-hint">加载中...</div>';
+        const r = await fetch(API + '/cases', {headers: headers()}).catch(() => null);
+        if (!r || !r.ok) { list.innerHTML = '<div class="empty-hint">暂时无法加载事务。</div>'; return; }
+        const data = await r.json();
+        const cases = data.cases || [];
+        if (!cases.length) {
+          list.innerHTML = '<div class="empty-hint">还没有可追踪的事务。发起跨部门咨询后，系统会自动创建 Case。</div>';
+          $('#case-detail').innerHTML = '<div class="empty-hint">选择一项事务查看详情。</div>';
+          return;
+        }
+        list.innerHTML = cases.map(item => `<button class="case-list-item ${item.id === activeCaseId ? 'active' : ''}" data-case-id="${esc(item.id)}">
+          <span class="case-list-title">${esc(item.title)}</span>
+          <span class="case-status status-${statusClass(item.status)}">${esc(CASE_STATUS[item.status] || item.status)}</span>
+          <span class="case-list-goal">${esc(item.goal)}</span>
+          <span class="case-list-time">更新于 ${esc(fmtDate(item.updated_at))}</span>
+        </button>`).join('');
+        list.querySelectorAll('[data-case-id]').forEach(btn => btn.addEventListener('click', () => loadCaseDetail(btn.dataset.caseId)));
+        if (!activeCaseId) loadCaseDetail(cases[0].id);
+      }
+
+      async function loadCaseDetail(caseId){
+        const detail = $('#case-detail');
+        activeCaseId = caseId;
+        detail.innerHTML = '<div class="empty-hint">加载事务详情...</div>';
+        const r = await fetch(API + '/cases/' + encodeURIComponent(caseId), {headers: headers()}).catch(() => null);
+        if (!r || !r.ok) { detail.innerHTML = '<div class="empty-hint">暂时无法加载事务详情。</div>'; return; }
+        const item = (await r.json()).case;
+        const tasks = (item.tasks || []).map(task => `<li class="case-task">
+          <span class="task-domain">${esc(task.domain.toUpperCase())}</span>
+          <span class="task-content"><strong>${esc(task.title)}</strong><small>${task.depends_on && task.depends_on.length ? '依赖：' + esc(task.depends_on.join('、')) : '可立即开始'}</small></span>
+          <span class="case-status status-${statusClass(task.status)}">${esc(TASK_STATUS[task.status] || task.status)}</span>
+        </li>`).join('') || '<li class="empty-hint">该事务由运行时协作策略决定专家与任务。</li>';
+        const artifacts = (item.artifacts || []).map(a => `<li class="case-artifact"><strong>${esc(a.expert_id)}</strong><span>${esc((a.payload || {}).summary || '已提交协作结论')}</span></li>`).join('') || '<li class="empty-hint">专家结论生成后会显示在这里。</li>';
+        const proposals = (item.operation_proposals || []).map(p => {
+          const canApprove = p.status === 'pending_approval' && ['hr', 'admin'].includes((window.__authUser || {}).role);
+          const action = p.status === 'proposed'
+            ? `<button class="panel-primary-btn case-confirm" data-proposal-id="${esc(p.id)}">确认操作</button>`
+            : canApprove
+              ? `<button class="panel-primary-btn case-approve" data-proposal-id="${esc(p.id)}">审批并执行 Mock</button>`
+              : `<span class="case-status status-${statusClass(p.status)}">${esc(p.status === 'pending_approval' ? '等待审批' : p.status)}</span>`;
+          return `<li class="case-proposal"><div><strong>${esc(p.summary)}</strong><small>${esc(p.resource_id)} · ${esc(p.action)}</small></div><div>${action}</div></li>`;
+        }).join('') || '<li class="empty-hint">当前没有需要确认的外部操作。</li>';
+        detail.innerHTML = `<header class="case-detail-head"><div><p class="eyebrow">${esc(item.template_id)}</p><h2>${esc(item.title)}</h2><p>${esc(item.goal)}</p></div><span class="case-status status-${statusClass(item.status)}">${esc(CASE_STATUS[item.status] || item.status)}</span></header>
+          <section class="case-section"><h3>部门任务</h3><ul class="case-task-list">${tasks}</ul></section>
+          <section class="case-section"><h3>可共享的专家结论</h3><ul class="case-artifact-list">${artifacts}</ul></section>
+          <section class="case-section"><h3>待我确认</h3><ul class="case-proposal-list">${proposals}</ul></section>`;
+        detail.querySelectorAll('.case-confirm').forEach(btn => btn.addEventListener('click', () => confirmCaseProposal(caseId, btn.dataset.proposalId)));
+        detail.querySelectorAll('.case-approve').forEach(btn => btn.addEventListener('click', () => approveCaseProposal(caseId, btn.dataset.proposalId)));
+        loadCases();
+      }
+
+      async function confirmCaseProposal(caseId, proposalId){
+        const r = await fetch(API + '/cases/' + encodeURIComponent(caseId) + '/proposals/' + encodeURIComponent(proposalId) + '/confirm', {method: 'POST', headers: headers(true)}).catch(() => null);
+        if (!r || !r.ok) { alert('操作确认失败，请稍后重试。'); return; }
+        loadCaseDetail(caseId);
+      }
+
+      async function approveCaseProposal(caseId, proposalId){
+        const r = await fetch(API + '/cases/' + encodeURIComponent(caseId) + '/proposals/' + encodeURIComponent(proposalId) + '/approve-mock', {method: 'POST', headers: headers(true)}).catch(() => null);
+        if (!r || !r.ok) { alert('审批执行失败，请确认当前账号具有 HR 或管理员权限。'); return; }
+        loadCaseDetail(caseId);
+      }
+
+      function openOnboardingForm(){
+        if (!window.__authToken) { $('#login-modal').classList.remove('hidden'); return; }
+        $('#onboarding-start-date').value = new Date().toISOString().slice(0, 10);
+        $('#onboarding-position').value = '';
+        $('#onboarding-department').value = (window.__authUser || {}).department || '';
+        $('#onboarding-modal').classList.remove('hidden');
+      }
+
+      async function createOnboarding(){
+        const startDate = $('#onboarding-start-date').value;
+        const position = $('#onboarding-position').value.trim();
+        const department = $('#onboarding-department').value.trim();
+        if (!startDate || !position) { alert('请填写入职日期和岗位。'); return; }
+        const goal = `为 ${position} 办理 ${startDate} 入职协同`;
+        const create = await fetch(API + '/cases', {method: 'POST', headers: headers(true), body: JSON.stringify({template_id: 'employee_onboarding', goal, context: {start_date: startDate, position, department}})}).catch(() => null);
+        if (!create || !create.ok) { alert('创建入职事项失败。'); return; }
+        const created = await create.json();
+        const caseId = created.case.id;
+        const prepare = await fetch(API + '/cases/' + encodeURIComponent(caseId) + '/onboarding/prepare', {method: 'POST', headers: headers(true), body: JSON.stringify({start_date: startDate, position, department})}).catch(() => null);
+        if (!prepare || !prepare.ok) { alert('入职资料确认失败，请在事务中心重试。'); return; }
+        $('#onboarding-modal').classList.add('hidden');
+        activeCaseId = caseId;
+        switchPanel('cases');
+        loadCaseDetail(caseId);
+      }
+
       document.addEventListener('click', e => {
         if (e.target.closest('[data-approve]')) actApproval(e.target.closest('[data-approve]').dataset.approve, true);
         if (e.target.closest('[data-reject]')) actApproval(e.target.closest('[data-reject]').dataset.reject, false);
@@ -575,6 +715,10 @@
       $('#btn-refresh-approvals').addEventListener('click', loadApprovals);
       $('#btn-mark-read').addEventListener('click', markAllRead);
       $('#btn-refresh-traces').addEventListener('click', loadTraces);
+      $('#btn-refresh-cases').addEventListener('click', loadCases);
+      $('#btn-open-onboarding').addEventListener('click', openOnboardingForm);
+      $('#onboarding-cancel').addEventListener('click', () => $('#onboarding-modal').classList.add('hidden'));
+      $('#onboarding-submit').addEventListener('click', createOnboarding);
       $$('.chip-btn[data-app-filter]').forEach(b => b.addEventListener('click', () => { appFilter = b.dataset.appFilter; $$('.chip-btn[data-app-filter]').forEach(x => x.classList.toggle('active', x === b)); loadApps(); }));
       document.addEventListener('keydown', e => { if (e.key === 'Escape') { $('#login-modal').classList.add('hidden'); $('#leave-modal').classList.add('hidden'); $('#user-popup').classList.add('hidden'); } });
 

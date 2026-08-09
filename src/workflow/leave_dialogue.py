@@ -44,6 +44,11 @@ class LeaveDialogue:
         with self._lock:
             return session_id in self._drafts or self.is_leave_request(query)
 
+    def has_active(self, session_id: str) -> bool:
+        """当前会话是否已有待补充的请假草稿。"""
+        with self._lock:
+            return session_id in self._drafts
+
     @staticmethod
     def is_leave_request(query: str) -> bool:
         normalized = query.replace(" ", "")
@@ -158,6 +163,9 @@ class LeaveDialogue:
                 "secondary": None,
                 "confidence": 1.0,
                 "method": "leave_dialogue",
+                "execution_mode": "workflow",
+                "execution_reason": "active_leave_dialogue",
+                "requires_confirmation": True,
             },
             "agent_name": "HR 专家",
             "retrieved_chunks": [],

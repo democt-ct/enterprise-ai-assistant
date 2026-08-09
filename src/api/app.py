@@ -91,16 +91,23 @@ def create_app() -> FastAPI:
         state = AppState()
         app.state.app_state = state
 
-        # 后台线程并行初始化,不阻塞 yield
-        init_thread = threading.Thread(
-            target=_init_engine,
-            args=(state,),
-            daemon=True,
-        )
-        init_thread.start()
-        logger.info("🌐 服务已启动,Agent 引擎后台初始化中...")
+        skip_agent_init = os.getenv("SKIP_AGENT_INIT", "").lower() in {"1", "true", "yes"}
+        if skip_agent_init:
+            logger.info("🧪 轻量测试模式：跳过 Agent/Embedding 初始化")
+        else:
+            # 后台线程并行初始化,不阻塞 yield
+            init_thread = threading.Thread(
+                target=_init_engine,
+                args=(state,),
+                daemon=True,
+            )
+            init_thread.start()
+            logger.info("🌐 服务已启动,Agent 引擎后台初始化中...")
         yield
-        _shutdown_engine(state)
+        if not skip_agent_init:
+            _shutdown_engine(state)
+        from src.tools.db.connection import close_db
+        close_db()
         logger.info("👋 Agent 引擎已关闭")
 
     app = FastAPI(
@@ -137,6 +144,7 @@ def create_app() -> FastAPI:
     from src.api.routes import leaves as leaves_routes
     from src.api.routes import approvals as approvals_routes
     from src.api.routes import applications as applications_routes
+    from src.api.routes import cases as cases_routes
     from src.api.routes import admin as admin_routes
     from src.api.routes import attendance as attendance_routes
     from src.api.routes import expenses as expenses_routes
@@ -150,6 +158,7 @@ def create_app() -> FastAPI:
     app.include_router(leaves_routes.router, prefix="/api")
     app.include_router(approvals_routes.router, prefix="/api")
     app.include_router(applications_routes.router, prefix="/api")
+    app.include_router(cases_routes.router, prefix="/api")
     app.include_router(admin_routes.router, prefix="/api")
     app.include_router(attendance_routes.router, prefix="/api")
     app.include_router(expenses_routes.router, prefix="/api")

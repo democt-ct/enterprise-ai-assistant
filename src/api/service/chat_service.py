@@ -1,22 +1,25 @@
-"""对话编排服务 -- 抽出 CLI 和 API 共用的 Agent 调用逻辑.
+"""对话执行服务 -- 抽出 CLI 和 API 共用的请求处理逻辑.
 
 支持:
-- 单 Agent 回答
-- 动态 max_tool_calls(按置信度自适应)
-- 跨域串行交割(primary → secondary)
+- 单领域知识问答
+- 确定性业务工作流
+- 跨领域只读协作与安全降级
 """
 
 from __future__ import annotations
 
 import time
 import uuid
+import logging
 from typing import Any, Callable
 
 from src.agents.base_agent import BaseAgent
 from src.agents.orchestrator import Orchestrator
+from src.collaboration.runtime import CaseRuntime
 from src.config import config
 from src.llm_client import call_llm_with_retry
 from src.protocol.types import AgentRequest
+from src.workflow.request_classifier import ExecutionMode, classify_request
 
 FALLBACK_RESPONSES: dict[str, str] = {
     "greeting": "你好!我是企业智能助手,可以帮你解答以下领域的问题:\n\n"
@@ -31,6 +34,18 @@ FALLBACK_RESPONSES: dict[str, str] = {
                "- 💻 **IT 支持** -- 报修,设备申领,密码,网络\n"
                "- ⚖️ **法务合规** -- 合同,保密,数据保护\n"
                "- 💰 **财务支持** -- 报销,预算,差旅,采购",
+}
+
+logger = logging.getLogger(__name__)
+
+WORKFLOW_GUIDANCE: dict[str, str] = {
+    "leave_form": "我会先收集请假信息，并在你确认后再提交申请。",
+    "expense_form": "请补充报销信息。提交前你仍可以检查和修改内容。",
+    "ticket_form": "请补充故障信息。确认后系统才会创建 IT 工单。",
+    "attendance_punch": "请选择签到或签退，系统会记录本次操作。",
+    "overtime_form": "请补充加班日期和时长，确认后再发起申请。",
+    "trip_form": "请补充出差信息，确认后再发起申请。",
+    "approval_check": "下面展示你的待审批事项，请确认后再执行审批操作。",
 }
 
 
@@ -58,16 +73,10 @@ def chat(
     session_ctx: Any = None,
     leave_dialogue: Any = None,
 ) -> dict[str, Any]:
-    """完整对话编排:路由 → Agent 执行 → 返回结果.
+    """完整请求处理：执行模式分类 → 专用执行器 → 统一结果。
 
-    支持跨域串行交割:如果路由识别出 secondary Agent,
-    或 primary Agent 返回 handoff_suggestions,自动接力处理.
-
-    如果提供了 Planner 且 PLANNER_ENABLED=true,则先进行任务规划:
-    - 单意图 → 透传原路由逻辑
-    - 多意图 → 拆分为子任务串行执行
-
-    如果提供了 conversation_store,自动加载/保存会话历史.
+    领域路由只决定由谁处理，执行模式另外区分知识问答、确定性工作流
+    和跨领域协作。Planner 只允许处理无需确认的跨领域请求。
     """
     if session_id is None:
         session_id = uuid.uuid4().hex[:12]
@@ -78,25 +87,25 @@ def chat(
     if conversation_store and not history:
         history = conversation_store.to_history_format(session_id)
 
-    # 对话式请假：先补齐必要信息，再由用户在确认卡片中显式提交。
-    # 这条路径不会调用任何写工具。
-    if leave_dialogue:
-        dialogue_result = leave_dialogue.handle(session_id, query)
+    raw_query = query
+
+    # 已经进入请假流程时，日期、天数等短回答可能无法单独完成领域路由，
+    # 因此优先交还给当前状态机；新请求仍先做完整路由，避免跨领域请求
+    # 被请假流程提前吞掉。
+    if leave_dialogue and leave_dialogue.has_active(session_id):
+        dialogue_result = leave_dialogue.handle(session_id, raw_query)
         if dialogue_result is not None:
-            dialogue_result["session_id"] = session_id
-            dialogue_result["processing_time_ms"] = int((time.time() - t0) * 1000)
-            _save_conversation(
-                conversation_store,
-                long_term_memory,
-                session_id,
-                query,
+            return _finalize_immediate_result(
                 dialogue_result,
+                t0=t0,
+                session_id=session_id,
+                query=raw_query,
+                conversation_store=conversation_store,
+                long_term_memory=long_term_memory,
                 user_id=session_ctx.user_id if session_ctx else "anonymous",
             )
-            return dialogue_result
 
     # ── 注入用户上下文:路由后才加,避免污染关键词匹配 ──────
-    raw_query = query  # 路由用原始 query
     user_context_str = ""
     if session_ctx:
         user_context_str = (
@@ -108,47 +117,33 @@ def chat(
             f"直接用这个 ID 调用工具,不要询问.]"
         )
 
-    # ── 0. Planner(如果启用) ──────────────────────────────
-    if planner and planner.enabled and config.planner_enabled:
-        plan = planner.plan(raw_query)
-        if plan.is_complex and len(plan.subtasks) > 1:
-            return _execute_plan(
-                plan, orchestrator, agent_instances, history,
-                session_id, on_step, t0, memory,
-                session_ctx=session_ctx,
-                review_agent=review_agent,
-                conversation_store=conversation_store,
-                long_term_memory=long_term_memory,
-                compressor=None,  # Planner 路径暂不触发压缩
-            )
-
     # ── 对话历史(供路由上下文推断)──
     conv_history: list[dict] = history or []
 
-    # ── 1. 路由(用原始 query,避免注入文字污染关键词匹配)──
+    # ── 1. 领域路由 + 执行模式分类 ───────────────────────
     route_result = orchestrator.route(raw_query, history=conv_history)
     route_result["query"] = raw_query  # 供 ReviewAgent LLM 审查用
+    decision = classify_request(raw_query, route_result)
+    route_result.update(decision.routing_fields())
+
     method = route_result.get("method", "unknown")
     primary = route_result.get("primary", "fallback")
     secondary = route_result.get("secondary")
     confidence = route_result.get("confidence", 0.5)
-    intent = route_result.get("intent", "action")
     action_card = route_result.get("action_card")
 
-    # 路由完成后,query 保持原始内容,用户上下文通过 AgentRequest.user_context 注入
+    # 路由完成后 query 保持原始内容，用户上下文通过 AgentRequest.user_context 注入。
     query = raw_query
-    if action_card:
-        query = query + "\n[系统提示:用户意图已识别,界面将自动展示操作表单.你只需用一句简短友好的话引导用户填写,不要分析,不要四段式,不要重复说明流程.]"
 
     # ── Fallback(寒暄 / 未知领域) ────────────────────────
-    if primary == "fallback" or method == "greeting":
+    if decision.mode is ExecutionMode.FALLBACK:
         elapsed = int((time.time() - t0) * 1000)
         answer = FALLBACK_RESPONSES.get(
             "greeting" if method == "greeting" else "unknown",
             FALLBACK_RESPONSES["unknown"],
         )
         _record_memory(memory, query, answer)
-        return {
+        result = {
             "session_id": session_id,
             "answer": answer,
             "routing": route_result,
@@ -161,11 +156,75 @@ def chat(
             "action_card": None,
         }
 
-    # ── 2. Primary Agent 执行 ──────────────────────────────
+        _save_conversation(
+            conversation_store,
+            long_term_memory,
+            session_id,
+            query,
+            result,
+            user_id=session_ctx.user_id if session_ctx else "anonymous",
+        )
+        return result
+
+    # ── 2. 确定性业务工作流 ──────────────────────────────
+    if decision.mode is ExecutionMode.WORKFLOW:
+        card_type = action_card.get("type") if action_card else ""
+        if card_type == "leave_form" and leave_dialogue:
+            dialogue_result = leave_dialogue.handle(session_id, raw_query)
+            if dialogue_result is not None:
+                return _finalize_immediate_result(
+                    dialogue_result,
+                    t0=t0,
+                    session_id=session_id,
+                    query=raw_query,
+                    conversation_store=conversation_store,
+                    long_term_memory=long_term_memory,
+                    user_id=session_ctx.user_id if session_ctx else "anonymous",
+                )
+
+        result = _build_workflow_result(
+            session_id=session_id,
+            route_result=route_result,
+            action_card=action_card,
+            t0=t0,
+        )
+        _record_memory(memory, query, result["answer"])
+        _save_conversation(
+            conversation_store,
+            long_term_memory,
+            session_id,
+            query,
+            result,
+            user_id=session_ctx.user_id if session_ctx else "anonymous",
+        )
+        return result
+
+    # Planner 只处理无需用户确认的跨领域复杂查询。涉及写操作时，
+    # 专家仅给出只读建议，不能让 LLM 规划器生成并执行提交节点。
+    if (
+        decision.mode is ExecutionMode.COLLABORATION
+        and not decision.requires_confirmation
+        and planner
+        and planner.enabled
+        and config.planner_enabled
+    ):
+        plan = planner.plan(raw_query)
+        if plan.is_complex and len(plan.subtasks) > 1:
+            return _execute_plan(
+                plan, orchestrator, agent_instances, history,
+                session_id, on_step, t0, memory,
+                session_ctx=session_ctx,
+                review_agent=review_agent,
+                conversation_store=conversation_store,
+                long_term_memory=long_term_memory,
+                compressor=None,
+            )
+
+    # ── 3. 专家执行 ───────────────────────────────────────
     max_calls = _calc_max_tool_calls(confidence)
 
-    # 动态 temperature:query 用低温追求准确性,action 用中温追求丰富度
-    run_temperature = 0.1 if intent == "query" else 0.5
+    # 知识与协作路径默认只读；结构化写操作已由上方工作流接管。
+    run_temperature = 0.1
 
     # Memory context: use session memory if available
     profile_text: str = ""
@@ -235,8 +294,8 @@ def chat(
         except Exception:
             pass
 
-    # ── Query 意图:轻量路径(跳 Planner + Review)─────────
-    if intent == "query":
+    # ── 单领域知识问答:轻量只读路径 ──────────────────────
+    if decision.mode is ExecutionMode.KNOWLEDGE:
         query_tool_result = _try_quick_tool(primary, raw_query, session_ctx, agent_instances)
         if query_tool_result is not None:
             elapsed = int((time.time() - t0) * 1000)
@@ -282,20 +341,41 @@ def chat(
                            user_id=session_ctx.user_id if session_ctx else "anonymous")
         return result
 
-    # ── Action 意图:完整路径 ──────────────────────────────
-    if secondary and secondary != primary:
+    # ── 跨领域协作:专家并行检索,统一整合 ─────────────────
+    if decision.mode is ExecutionMode.COLLABORATION and secondary and secondary != primary:
+        runtime = CaseRuntime()
+        active_case = runtime.start(
+            fallback_case_id=session_id, goal=raw_query, route_result=route_result,
+            requires_confirmation=decision.requires_confirmation, session_ctx=session_ctx,
+        )
+        workspace = active_case.workspace
+
+        def _run_collaboration_expert(expert_id: str) -> dict[str, Any]:
+            expert_context = runtime.expert_context(active_case, expert_id)
+            response = _run_agent(expert_id, expert_context, "query")
+            runtime.record_response(active_case, expert_id, response)
+            return response
+
         import concurrent.futures
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            f_primary = executor.submit(_run_agent, primary)
-            f_secondary = executor.submit(_run_agent, secondary)
-            primary_result = f_primary.result()
-            secondary_result = f_secondary.result()
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+                # 跨领域写请求只生成建议和确认入口，不允许专家直接执行工具。
+                f_primary = executor.submit(_run_collaboration_expert, primary)
+                f_secondary = executor.submit(_run_collaboration_expert, secondary)
+                primary_result = f_primary.result()
+                secondary_result = f_secondary.result()
+        except Exception:
+            runtime.mark_blocked(
+                active_case,
+                session_ctx.user_id if session_ctx else "anonymous",
+                "expert_execution_failed",
+            )
+            raise
+
+        runtime.finalize(active_case, session_ctx.user_id if session_ctx else "anonymous")
 
         total_tokens = primary_result.get("tokens_used", 0) + secondary_result.get("tokens_used", 0)
-        merge_results = [
-            {"agent_name": primary_result['agent_name'], "answer": primary_result['answer']},
-            {"agent_name": secondary_result['agent_name'], "answer": secondary_result['answer']},
-        ]
+        merge_results = runtime.composer_inputs(active_case)
         _raw_answers = "\n\n---\n\n".join(
             f"## {r['agent_name']} 的处理结果\n\n{r['answer']}" for r in merge_results
         )
@@ -308,7 +388,12 @@ def chat(
             "session_id": session_id,
             "answer": merged_answer,
             "raw_answers": _raw_answers,
-            "routing": {**route_result, "handoff": secondary, "handoff_reason": "并行执行"},
+            "routing": {
+                **route_result,
+                "handoff": secondary,
+                "handoff_reason": "共享工作区并行协作",
+                "case_id": workspace.case_id,
+            },
             "agent_name": f"{primary_result['agent_name']} ‖ {secondary_result['agent_name']}",
             "retrieved_chunks": (
                 primary_result["retrieved_chunks"] + secondary_result.get("retrieved_chunks", [])
@@ -326,6 +411,7 @@ def chat(
             "processing_time_ms": elapsed,
             "tokens_used": total_tokens,
             "action_card": action_card,
+            "collaboration": runtime.trace_view(active_case),
         }
         if review_agent:
             result = _apply_review(result, review_agent)
@@ -334,104 +420,58 @@ def chat(
                            user_id=session_ctx.user_id if session_ctx else "anonymous")
         return result
 
-    primary_result = _run_agent(primary)
+    raise RuntimeError(f"unsupported execution mode: {decision.mode}")
 
-    # ── 3. 判断是否需要跨域交割 ────────────────────────────
-    handoff_target = None
-    handoff_reason = ""
 
-    # secondary 已在上方并行处理,此处仅处理 Agent 自身建议的交割
-    # 信号 B:Primary Agent 自己建议转交
-    suggestions = primary_result.get("handoff_suggestions")
-    if suggestions and isinstance(suggestions, list) and len(suggestions) > 0:
-        sug = suggestions[0]
-        sug_target = sug.get("target_agent")
-        if sug_target and sug_target != primary and agent_instances.get(sug_target):
-            handoff_target = sug_target
-            handoff_reason = sug.get("reason", f"{primary} 建议转交 {sug_target}")
+def _build_workflow_result(
+    session_id: str,
+    route_result: dict[str, Any],
+    action_card: dict[str, Any] | None,
+    t0: float,
+) -> dict[str, Any]:
+    """构造确定性工作流入口，不调用 LLM 或业务写工具。"""
 
-    # ── 4. Secondary Agent 接力 ───────────────────────────
-    total_tokens = primary_result.get("tokens_used", 0)
-
-    if handoff_target:
-        handoff_ctx = {
-            "from_agent": primary,
-            "summary": primary_result["answer"][:500],
-            "unresolved_items": [handoff_reason],
-        }
-        secondary_result = _run_agent(handoff_target, handoff_ctx)
-        total_tokens += secondary_result.get("tokens_used", 0)
-
-        # 合并回答(LLM 综合摘要 + 回退拼接)
-        merge_results = [
-            {"agent_name": primary_result['agent_name'], "answer": primary_result['answer']},
-            {"agent_name": secondary_result['agent_name'], "answer": secondary_result['answer']},
-        ]
-        _raw_answers = "\n\n---\n\n".join(
-            f"## {r['agent_name']} 的处理结果\n\n{r['answer']}" for r in merge_results
-        )
-        _llm_client = next(iter(agent_instances.values())).client if agent_instances else None
-        _llm_model = config.llm_model
-        merged_answer = _merge_answers(_llm_client, _llm_model, raw_query, merge_results) if _llm_client else _raw_answers
-
-        elapsed = int((time.time() - t0) * 1000)
-        _record_memory(memory, query, merged_answer)
-        result = {
-            "session_id": session_id,
-            "answer": merged_answer,
-            "raw_answers": _raw_answers,
-            "routing": {
-                **route_result,
-                "handoff": handoff_target,
-                "handoff_reason": handoff_reason,
-            },
-            "agent_name": f"{primary_result['agent_name']} → {secondary_result['agent_name']}",
-            "retrieved_chunks": (
-                primary_result["retrieved_chunks"]
-                + secondary_result.get("retrieved_chunks", [])
-            ),
-            "tool_calls": (
-                primary_result["tool_calls"]
-                + secondary_result.get("tool_calls", [])
-            ),
-            "reasoning": (
-                (primary_result.get("reasoning") or "")
-                + "\n\n---\n\n"
-                + (secondary_result.get("reasoning") or "")
-                if primary_result.get("reasoning") or secondary_result.get("reasoning")
-                else None
-            ),
-            "processing_time_ms": elapsed,
-            "tokens_used": total_tokens,
-            "action_card": action_card,
-        }
-        if review_agent:
-            result = _apply_review(result, review_agent)
-        _save_conversation(conversation_store, long_term_memory, session_id, query, result,
-                           compressor=_compressor,
-                           user_id=session_ctx.user_id if session_ctx else "anonymous")
-        return result
-
-    # ── 5. 仅 primary(单域回答) ──────────────────────────
-    elapsed = int((time.time() - t0) * 1000)
-    _record_memory(memory, query, primary_result["answer"])
-    result = {
+    card_type = action_card.get("type", "") if action_card else ""
+    answer = WORKFLOW_GUIDANCE.get(
+        card_type,
+        "请补充业务信息并确认。系统只会在你明确确认后执行操作。",
+    )
+    return {
         "session_id": session_id,
-        "answer": primary_result["answer"],
+        "answer": answer,
         "routing": route_result,
-        "agent_name": primary_result["agent_name"],
-        "retrieved_chunks": primary_result["retrieved_chunks"],
-        "tool_calls": primary_result["tool_calls"],
-        "reasoning": primary_result.get("reasoning"),
-        "processing_time_ms": elapsed,
-        "tokens_used": total_tokens,
+        "agent_name": "业务工作流",
+        "retrieved_chunks": [],
+        "tool_calls": [],
+        "reasoning": None,
+        "processing_time_ms": int((time.time() - t0) * 1000),
+        "tokens_used": 0,
         "action_card": action_card,
     }
-    if review_agent:
-        result = _apply_review(result, review_agent)
-    _save_conversation(conversation_store, long_term_memory, session_id, query, result,
-                       compressor=_compressor,
-                       user_id=session_ctx.user_id if session_ctx else "anonymous")
+
+
+def _finalize_immediate_result(
+    result: dict[str, Any],
+    *,
+    t0: float,
+    session_id: str,
+    query: str,
+    conversation_store: Any = None,
+    long_term_memory: Any = None,
+    user_id: str = "anonymous",
+) -> dict[str, Any]:
+    """补齐状态机等即时结果的公共字段并保存会话。"""
+
+    result["session_id"] = session_id
+    result["processing_time_ms"] = int((time.time() - t0) * 1000)
+    _save_conversation(
+        conversation_store,
+        long_term_memory,
+        session_id,
+        query,
+        result,
+        user_id=user_id,
+    )
     return result
 
 
@@ -642,6 +682,7 @@ def _execute_plan(
         history=history,
         session_id=session_id,
         on_step=on_step,
+        read_only=True,
     )
 
     elapsed = wf_result.total_elapsed_ms
@@ -666,6 +707,9 @@ def _execute_plan(
             "primary": plan.subtasks[0].domain + "_agent" if plan.subtasks else "fallback",
             "method": "planner_dag",
             "plan_subtasks": len(plan.subtasks),
+            "execution_mode": "collaboration",
+            "execution_reason": "read_only_planner_dag",
+            "requires_confirmation": False,
         },
         "agent_name": " → ".join(
             t.domain for t in plan.subtasks

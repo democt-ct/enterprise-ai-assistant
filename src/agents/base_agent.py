@@ -417,27 +417,12 @@ class BaseAgent:
         if tool is None:
             return {"error": f"未知工具: {name}"}
 
-        # 尝试通过 Tool Agent 执行(权限 + 审计)
+        # 所有专家工具调用必须经过 Resource Gateway；禁止异常时绕过权限直调。
         session = getattr(self, "_session_ctx", None)
-        if session is not None:
-            try:
-                from src.agents.tool_agent import get_tool_agent
-                ta = get_tool_agent()
-                result = ta.execute(tool, arguments, session)
-                if result.permission_denied:
-                    return {"error": result.error or "权限不足"}
-                if result.data is not None:
-                    return result.data
-            except Exception:
-                pass  # Tool Agent 不可用时回退到直接调用
-
-        # 回退:直接调用
         try:
-            result = tool.implementation(**arguments)
-            if isinstance(result, dict):
-                return result
-            return {"result": result}
+            from src.collaboration.resource_gateway import get_resource_gateway
+            return get_resource_gateway().execute(self.name, tool, arguments, session)
         except Exception as e:
-            return {"error": str(e)}
+            return {"error": f"资源网关不可用: {e}"}
 
 

@@ -8,3 +8,9 @@ chroma_db/
 dist/
 .streamlit/
 ui-ux-pro-max-skill/
+.cfargotunnel.com
+.reasonix/
+.vscode/
+data/backups/
+data/*.db
+docs/project-review-*.md

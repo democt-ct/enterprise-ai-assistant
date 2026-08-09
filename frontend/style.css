@@ -1781,3 +1781,36 @@ html.dark .msg-body th { background: rgba(15, 23, 42, 0.8); }
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Case center: task progress and user-confirmed operations are shown separately. */
+#panel-cases { padding: 28px; overflow: auto; }
+.case-workbench { display: grid; grid-template-columns: minmax(220px, .8fr) minmax(0, 2fr); gap: 18px; align-items: start; }
+.case-list, .case-detail { border: 1px solid var(--color-border); border-radius: 18px; background: var(--color-surface); }
+.case-list { overflow: hidden; }
+.case-list-item { width: 100%; text-align: left; padding: 16px; border: 0; border-bottom: 1px solid var(--color-border); background: transparent; color: inherit; cursor: pointer; display: grid; gap: 7px; }
+.case-list-item:hover, .case-list-item.active { background: var(--color-surface-hover); }
+.case-list-title { font-weight: 700; }
+.case-list-goal, .case-list-time, .case-task small, .case-proposal small { color: var(--color-text-muted); font-size: 12px; }
+.case-status { width: fit-content; padding: 3px 8px; border-radius: 999px; background: var(--color-surface-hover); color: var(--color-text-secondary); font-size: 12px; font-weight: 700; }
+.status-coordinating, .status-in_progress { color: var(--color-primary); background: color-mix(in srgb, var(--color-primary) 12%, transparent); }
+.status-completed { color: #16865b; background: #dcfce7; }
+.status-blocked { color: #b45309; background: #fef3c7; }
+.status-waiting_input, .status-waiting_approval, .status-waiting_dependency { color: #7c3aed; background: #f3e8ff; }
+.case-detail { padding: 24px; min-height: 360px; }
+.case-detail-head { display: flex; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--color-border); padding-bottom: 16px; }
+.case-detail-head h2 { margin: 3px 0 6px; }
+.case-detail-head p { margin: 0; color: var(--color-text-secondary); }
+.case-section { margin-top: 22px; }
+.case-section h3 { font-size: 14px; margin: 0 0 10px; }
+.case-task-list, .case-artifact-list, .case-proposal-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.case-task, .case-artifact, .case-proposal { border: 1px solid var(--color-border); border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 10px; }
+.task-domain { min-width: 48px; text-align: center; padding: 4px 6px; border-radius: 7px; color: var(--color-primary); background: color-mix(in srgb, var(--color-primary) 10%, transparent); font-size: 11px; font-weight: 800; }
+.task-content { flex: 1; display: grid; gap: 4px; }
+.case-artifact { align-items: flex-start; display: grid; gap: 4px; }
+.case-artifact span { color: var(--color-text-secondary); font-size: 13px; line-height: 1.55; }
+.case-proposal { justify-content: space-between; }
+.case-proposal > div:first-child { display: grid; gap: 4px; }
+.case-confirm { white-space: nowrap; }
+.panel-header-actions { display: flex; gap: 8px; align-items: center; }
+.modal-hint { margin: -2px 0 14px; color: var(--color-text-secondary); font-size: 13px; line-height: 1.5; }
+@media (max-width: 860px) { #panel-cases { padding: 18px 12px; } .case-workbench { grid-template-columns: 1fr; } }
