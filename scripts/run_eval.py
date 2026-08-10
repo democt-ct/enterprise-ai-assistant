@@ -97,9 +97,20 @@ def main() -> None:
         help="Only evaluate routing accuracy (skip agent execution, much faster)",
     )
     parser.add_argument(
+        "--no-llm",
+        action="store_true",
+        help="Disable LLM routing fallback (keyword rules only, fully offline)",
+    )
+    parser.add_argument(
         "--retrieval-only",
         action="store_true",
         help="Evaluate routing + RAG retrieval accuracy, skip LLM agent execution (fast)",
+    )
+    parser.add_argument(
+        "--mode",
+        choices=["hybrid", "vector", "bm25"],
+        default="hybrid",
+        help="Retrieval mode for A/B comparison (default: hybrid)",
     )
     parser.add_argument(
         "--output",
@@ -124,7 +135,7 @@ def main() -> None:
         from src.llm_client import get_client
         from src.agents.orchestrator import Orchestrator
 
-        client = get_client()
+        client = None if args.no_llm else get_client()
         orchestrator = Orchestrator(client)
         agents: dict = {}
 
@@ -134,7 +145,7 @@ def main() -> None:
         results = []
         for case in cases:
             t0 = time.time()
-            route = orchestrator.route(case.query)
+            route = orchestrator.route(case.query, use_llm=not args.no_llm)
             elapsed_ms = int((time.time() - t0) * 1000)
             primary = route.get("primary", "fallback")
             routing_correct = primary == case.expected_agent
@@ -164,7 +175,12 @@ def main() -> None:
 
         runner = EvalRunner(system["orchestrator"], system["agents"])
         print("🏃 Running retrieval evaluation...")
-        report = runner.run(cases, retrieval_only=True)
+        report = runner.run(
+            cases,
+            retrieval_only=True,
+            use_llm=False,
+            retrieval_mode=args.mode,
+        )
 
         for agent in system["agents"].values():
             try:

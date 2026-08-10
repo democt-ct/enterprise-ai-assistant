@@ -34,7 +34,14 @@ def build_bm25(chunks: list[str]) -> BM25Okapi:
         BM25Okapi 索引实例.
     """
     tokenized = [tokenize_chinese(c) for c in chunks]
-    return BM25Okapi(tokenized)
+    bm25 = BM25Okapi(tokenized)
+    # 小语料 BM25 病态修复:术语出现文档数接近语料一半时,
+    # idf = log((N-df+0.5)/(df+0.5)) ≈ 0,高频但关键的业务术语
+    # (如"网络""密码")会被零权重,关键词召回能力失效。
+    # 对 idf 设置下限,保留术语精确匹配的贡献。
+    idf_floor = 0.5
+    bm25.idf = {term: max(value, idf_floor) for term, value in bm25.idf.items()}
+    return bm25
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -135,7 +142,7 @@ def rrf_fusion(
     vector_results: list[dict[str, Any]],
     bm25_results: list[dict[str, Any]],
     k: int = 10,
-    bm25_weight: float = 1.5,
+    bm25_weight: float = 1.0,
 ) -> list[dict[str, Any]]:
     """Reciprocal Rank Fusion -- 融合向量检索和 BM25 检索结果.
 

@@ -134,6 +134,28 @@ def _get_keyword_rules() -> list[tuple[list[str], str]]:
             _DOMAIN_KW_TOTALS[agent_key] = len(keywords)
     return _KEYWORD_RULES_CACHE
 
+
+# 核心意图词 -- 多领域命中时用于判定主领域:
+# 核心词命中的领域优先(如"报修/坏了"强于场景词"出差"),
+# 核心词数量相同时再按出现位置决定主次。
+# 这些词必须存在于 config.domain_keywords 对应领域列表中。
+_CORE_KEYWORDS: dict[str, list[str]] = {
+    "hr_agent": [
+        "请假", "年假", "病假", "事假", "调休", "入职", "离职",
+        "绩效", "年终奖",
+    ],
+    "it_agent": [
+        "报修", "坏了", "维修", "蓝屏", "死机", "开不了机", "重装",
+        "申领", "误删",
+    ],
+    "legal_agent": [
+        "合同", "合规", "保密", "竞业", "旷工", "开除", "侵权", "违约",
+    ],
+    "finance_agent": [
+        "报销", "发票", "预算", "结算", "采购", "个税",
+    ],
+}
+
 # 寒暄/无关话题(直接 fallback,不调 LLM)
 GREETING_PATTERNS: list[str] = [
     r"^(你好|您好|hi|hello|早上好|下午好|晚上好|在吗|在不在)[\s!!..]*$",
@@ -393,7 +415,11 @@ class Orchestrator:
         # 2. 关键词规则匹配
         keyword_result = self._keyword_match(query)
         if keyword_result:
-            keyword_result["action_card"] = _detect_action_card(query, keyword_result.get("intent", "action"), self.client)
+            keyword_result["action_card"] = _detect_action_card(
+                query,
+                keyword_result.get("intent", "action"),
+                self.client if use_llm else None,
+            )
             return keyword_result
 
         # 3. 短应答上下文推断("需要""好的""可以"等确认词)
@@ -461,6 +487,37 @@ class Orchestrator:
             }
 
         if len(hits) > 1:
+            # 多领域命中 → 核心意图词优先,其次命中数,最后出现位置
+            core_hits = {
+                agent: [kw for kw in kws if kw in _CORE_KEYWORDS.get(agent, [])]
+                for agent, kws in hits.items()
+            }
+            if any(core_hits.values()):
+                def _first_pos(agent: str) -> int:
+                    return min(query.lower().index(kw.lower()) for kw in hits[agent])
+
+                max_core = max(len(v) for v in core_hits.values())
+                candidates = [a for a, v in core_hits.items() if len(v) == max_core]
+                primary_agent = min(candidates, key=_first_pos)
+                primary_kw = hits[primary_agent]
+
+                # 次要领域:除主领域外命中数最多的领域
+                others = sorted(
+                    ((a, len(hits[a])) for a in hits if a != primary_agent),
+                    key=lambda x: x[1],
+                    reverse=True,
+                )
+                secondary_agent = others[0][0] if others else None
+                confidence = round(min(0.85, 0.70 + 0.10 * min(max_core, 1.5)), 2)
+                return {
+                    "primary": primary_agent,
+                    "secondary": secondary_agent,
+                    "confidence": confidence,
+                    "method": "keyword",
+                    "intent": intent,
+                    "matched_keywords": primary_kw,
+                }
+
             # 多领域命中 → 按命中数排序
             sorted_hits = sorted(hits.items(), key=lambda x: len(x[1]), reverse=True)
             primary_agent, primary_kw = sorted_hits[0]

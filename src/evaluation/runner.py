@@ -35,7 +35,14 @@ class EvalRunner:
         self._orchestrator = orchestrator
         self._agents = agent_instances
 
-    def run(self, cases: list[TestCase], retrieval_only: bool = False, use_llm: bool = True, rewrite: bool = True) -> EvalReport:
+    def run(
+        self,
+        cases: list[TestCase],
+        retrieval_only: bool = False,
+        use_llm: bool = True,
+        rewrite: bool = True,
+        retrieval_mode: str = "hybrid",
+    ) -> EvalReport:
         """Execute all test cases and return an aggregate report.
 
         Args:
@@ -49,7 +56,13 @@ class EvalRunner:
 
         for case in cases:
             try:
-                result = self._run_one(case, retrieval_only=retrieval_only, use_llm=use_llm, rewrite=rewrite)
+                result = self._run_one(
+                    case,
+                    retrieval_only=retrieval_only,
+                    use_llm=use_llm,
+                    rewrite=rewrite,
+                    retrieval_mode=retrieval_mode,
+                )
                 results.append(result)
             except Exception as e:
                 errors.append(f"{case.id}: {e}")
@@ -72,7 +85,14 @@ class EvalRunner:
 
     # ── Per-case execution ───────────────────────────────────────
 
-    def _run_one(self, case: TestCase, retrieval_only: bool = False, use_llm: bool = True, rewrite: bool = True) -> EvalResult:
+    def _run_one(
+        self,
+        case: TestCase,
+        retrieval_only: bool = False,
+        use_llm: bool = True,
+        rewrite: bool = True,
+        retrieval_mode: str = "hybrid",
+    ) -> EvalResult:
         """Route + execute one test case, compare against expectations.
 
         retrieval_only=True: skip Agent.run(), evaluate routing + retrieval only.
@@ -106,7 +126,9 @@ class EvalRunner:
             tools_correct = True  # retrieval_only 不评估工具
             if agent is not None and primary != "fallback":
                 try:
-                    chunks = agent.kb.query(case.query, top_k=10, rewrite=rewrite)
+                    chunks = agent.kb.query(
+                        case.query, top_k=10, rewrite=rewrite, mode=retrieval_mode
+                    )
                     retrieved_sources = list(set(
                         c.get("source", "") for c in chunks
                     ))
@@ -119,12 +141,19 @@ class EvalRunner:
         else:
             # ── 全量模式:跑完整 Agent ────────────────────
             if agent is not None and primary != "fallback":
+                # 注入模拟登录用户身份(与生产 chat_service 的 user_context 同格式):
+                # 否则"我的余额/我的部门"等查询缺少 user_id,Agent 只能反问用户。
+                user_context = (
+                    "[当前登录用户 user_id=EMP001 姓名=张三 部门=工程部 角色=employee."
+                    "当用户说'我''帮我'时,user_id 就是 EMP001,直接用这个 ID 调用工具,不要询问.]"
+                )
                 req = AgentRequest(
                     query=case.query,
                     agent_name=primary,
                     conversation_history=[],
                     max_tool_calls=config.max_tool_calls_low,
                     temperature=config.llm_temperature,
+                    user_context=user_context,
                 )
                 try:
                     resp = agent.run(req)

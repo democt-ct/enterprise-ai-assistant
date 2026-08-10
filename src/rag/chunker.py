@@ -87,7 +87,7 @@ def split_documents(
     )
 
     chunks: list[dict[str, str | int]] = []
-    for doc in docs:
+    for doc in documents:
         text = doc.get("text", "")
         source = doc.get("source", "")
         title = doc.get("title", source)

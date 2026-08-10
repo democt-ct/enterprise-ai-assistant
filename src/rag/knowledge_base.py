@@ -278,9 +278,17 @@ class KnowledgeBase:
         "报修": "报修", "网络": "网络", "vpn": "VPN",
         "合同": "合同", "保密": "保密", "合规": "合规",
         "报销": "报销", "预算": "预算", "出差": "出差",
+        "密码": "密码", "卡顿": "卡顿", "监控": "个人信息",
+        "怀孕": "产假", "泄露": "泄露",
     }
 
-    def query(self, query: str, top_k: int = 10, rewrite: bool = True) -> list[dict[str, Any]]:
+    def query(
+        self,
+        query: str,
+        top_k: int = 10,
+        rewrite: bool = True,
+        mode: str = "hybrid",
+    ) -> list[dict[str, Any]]:
         """检索最相关的文档片段.
 
         FAQ 优先:高频简单问题直接 BM25 匹配,跳过 LLM 改写和向量检索.
@@ -289,6 +297,10 @@ class KnowledgeBase:
             query: 检索查询.
             top_k: 返回条数.
             rewrite: 是否启用查询改写(需要已设置 rewriter).
+            mode: 检索模式:
+                - "hybrid" 向量 + BM25 → RRF 融合(默认)
+                - "vector" 仅向量检索(用于 A/B 基线对比)
+                - "bm25"   仅关键词检索(用于 A/B 基线对比)
 
         Returns:
             [{"content": "...", "source": "年假制度.md", "section": "...", "score": 0.94}, ...]
@@ -297,7 +309,7 @@ class KnowledgeBase:
             raise RuntimeError("请先调用 build_index() 或 load_index()")
 
         # ── 缓存检查 ────────────────────────────────────────
-        cache_key = f"{query}::top_k={top_k}::rewrite={rewrite}"
+        cache_key = f"{query}::top_k={top_k}::rewrite={rewrite}::mode={mode}"
         cache_key_hash = hashlib.md5(cache_key.encode()).hexdigest()
         now = time.time()
         cache_hit = False
@@ -313,17 +325,18 @@ class KnowledgeBase:
 
         # ── FAQ 快速路径:纯查询类短问题跳过 LLM 改写和向量检索 ──
         faq_key = _match_faq(query, self._FAQ_PATTERNS)
-        if faq_key and len(query.strip()) < 30:
+        if faq_key and len(query.strip()) < 30 and mode != "vector":
             logger.debug("FAQ fast-path: %s → key=%s", query[:40], faq_key)
             bm25_results = search_bm25(
                 self._bm25, self._chunks_metadata, faq_key, top_k=top_k
             )
             result = bm25_results[:top_k]
+            faq_mode = "bm25" if mode in ("hybrid", "bm25") else mode
             self._last_query_meta = {
                 "cache_hit": False, "rewritten_query": query,
                 "rewrite_used": False, "faq_fast_path": True,
                 "vector_count": 0, "bm25_count": len(bm25_results),
-                "fused_count": len(result), "fusion_method": "bm25_faq",
+                "fused_count": len(result), "fusion_method": f"{faq_mode}_faq",
             }
             if len(self._cache) >= self._cache_maxsize:
                 oldest = min(self._cache, key=lambda k: self._cache[k][0])
@@ -355,29 +368,44 @@ class KnowledgeBase:
             retrieval_k = config.rerank_retrieval_k
 
         # 向量检索(用改写后的 query)
-        vector_results = search_vector(self._collection, query_vector, top_k=retrieval_k)
-
-        # BM25 检索
-        bm25_results = search_bm25(
-            self._bm25, self._chunks_metadata, search_query, top_k=retrieval_k
+        vector_results = (
+            search_vector(self._collection, query_vector, top_k=retrieval_k)
+            if mode != "bm25"
+            else []
         )
 
-        # RRF 融合
-        fused = rrf_fusion(vector_results, bm25_results)
-
-        # 重排序(如果启用)
-        if self._reranker and config.rerank_enabled:
-            result = self._reranker.rerank(
-                search_query, fused[:retrieval_k], top_k=config.rerank_top_k
+        # BM25 检索
+        bm25_results = (
+            search_bm25(
+                self._bm25, self._chunks_metadata, search_query, top_k=retrieval_k
             )
-            rerank_used = True
+            if mode != "vector"
+            else []
+        )
+
+        if mode == "vector":
+            result = vector_results[:top_k]
+        elif mode == "bm25":
+            result = bm25_results[:top_k]
         else:
-            result = fused[:top_k]
+            # RRF 融合
+            fused = rrf_fusion(vector_results, bm25_results)
+
+            # 重排序(如果启用)
+            if self._reranker and config.rerank_enabled:
+                result = self._reranker.rerank(
+                    search_query, fused[:retrieval_k], top_k=config.rerank_top_k
+                )
+                rerank_used = True
+            else:
+                result = fused[:top_k]
 
         # ── 查询元数据(供 trace / 调试)─
-        fusion_method = "rerank" if rerank_used else (
-            "rrf" if (vector_results and bm25_results) else (
-                "vector" if vector_results else "bm25"
+        fusion_method = mode if mode in ("vector", "bm25") else (
+            "rerank" if rerank_used else (
+                "rrf" if (vector_results and bm25_results) else (
+                    "vector" if vector_results else "bm25"
+                )
             )
         )
         self._last_query_meta = {
@@ -386,7 +414,7 @@ class KnowledgeBase:
             "rewrite_used": rewrite_used,
             "vector_count": len(vector_results),
             "bm25_count": len(bm25_results),
-            "fused_count": len(fused),
+            "fused_count": len(fused) if mode == "hybrid" else 0,
             "fusion_method": fusion_method,
             "rerank_used": rerank_used,
             "retrieval_k": retrieval_k,

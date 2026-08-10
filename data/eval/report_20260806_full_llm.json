@@ -1,0 +1,1098 @@
+{
+  "total": 37,
+  "passed": 37,
+  "routing_accuracy": 1.0,
+  "tool_accuracy": 1.0,
+  "retrieval_accuracy": 1.0,
+  "avg_time_ms": 10620.945945945947,
+  "avg_tokens": 13307.594594594595,
+  "by_category": {
+    "hr": {
+      "total": 10,
+      "routing_ok": 10,
+      "tools_ok": 3,
+      "tool_total": 3,
+      "retrieval_ok": 9,
+      "retrieval_total": 9,
+      "routing_accuracy": 1.0,
+      "tool_accuracy": 1.0,
+      "retrieval_accuracy": 1.0
+    },
+    "it": {
+      "total": 7,
+      "routing_ok": 7,
+      "tools_ok": 2,
+      "tool_total": 2,
+      "retrieval_ok": 7,
+      "retrieval_total": 7,
+      "routing_accuracy": 1.0,
+      "tool_accuracy": 1.0,
+      "retrieval_accuracy": 1.0
+    },
+    "legal": {
+      "total": 7,
+      "routing_ok": 7,
+      "tools_ok": 0,
+      "tool_total": 0,
+      "retrieval_ok": 7,
+      "retrieval_total": 7,
+      "routing_accuracy": 1.0,
+      "tool_accuracy": 0.0,
+      "retrieval_accuracy": 1.0
+    },
+    "finance": {
+      "total": 6,
+      "routing_ok": 6,
+      "tools_ok": 3,
+      "tool_total": 3,
+      "retrieval_ok": 5,
+      "retrieval_total": 5,
+      "routing_accuracy": 1.0,
+      "tool_accuracy": 1.0,
+      "retrieval_accuracy": 1.0
+    },
+    "fallback": {
+      "total": 3,
+      "routing_ok": 3,
+      "tools_ok": 0,
+      "tool_total": 0,
+      "retrieval_ok": 0,
+      "retrieval_total": 0,
+      "routing_accuracy": 1.0,
+      "tool_accuracy": 0.0,
+      "retrieval_accuracy": 0.0
+    },
+    "cross": {
+      "total": 4,
+      "routing_ok": 4,
+      "tools_ok": 0,
+      "tool_total": 0,
+      "retrieval_ok": 0,
+      "retrieval_total": 0,
+      "routing_accuracy": 1.0,
+      "tool_accuracy": 0.0,
+      "retrieval_accuracy": 0.0
+    }
+  },
+  "results": [
+    {
+      "case_id": "eval_001",
+      "query": "我今年还剩几天年假？",
+      "category": "hr",
+      "expected_agent": "hr_agent",
+      "actual_agent": "hr_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.75,
+      "expected_tools": [
+        "get_leave_balance"
+      ],
+      "actual_tools": [
+        "get_leave_balance"
+      ],
+      "tools_correct": true,
+      "expected_sources": [
+        "年假管理制度.md"
+      ],
+      "retrieved_sources": [
+        "年假管理制度.md",
+        "请假审批流程.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "张三，你好！根据系统查询，你今年的假期余额如下：\n\n| 假期类型 | 剩余天数 |\n|---------|---------|\n| **年假** | **10 天** |\n| 病假 | 5 天 |\n| 事假 | 2 天 |\n\n几点提醒：\n\n- 年假须在**一个自然年内休完**，不可跨年度累积；如因工作原因确实无法安排，可在**次年 3 月 31 日前**申请补休，逾期作废。\n- 年假最小请假单位为 **0.5 天**（半天），可以分段休。\n- 申请年假若包含周末或法定节假日，**不计入年假天数**，不会额外扣额度。\n\n**需要我帮你提交年假申请吗？** 告诉我起止日期即可，我来帮你办理。",
+      "processing_time_ms": 4202,
+      "tokens_used": 16395,
+      "error": null
+    },
+    {
+      "case_id": "eval_002",
+      "query": "请3天病假怎么申请？",
+      "category": "hr",
+      "expected_agent": "hr_agent",
+      "actual_agent": "hr_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.75,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [
+        "请假审批流程.md"
+      ],
+      "retrieved_sources": [
+        "病假和医疗期规定.md",
+        "请假审批流程.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "请3天病假属于**≤3个工作日**的普通病假，审批链条比较简单，整体流程如下：\n\n1. **提前申请**：在休假开始前**至少1个工作日**，通过OA系统提交病假申请，选择\"病假\"类型，填写起止时间和事由。\n2. **上传材料**：提供**二级甲等及以上公立医院**出具的**病假条/诊断证明**（需盖医院医务科公章或病假专用章），拍照或扫描后清晰上传。病假条上需注明患者姓名、就诊科室、建议休息起止日期及天数。\n3. **逐级审批**：3天病假只需**直属上级**审批即可，无需部门负责人和HR介入。\n4. **结果反馈**：审批结果一般**1个工作日**内通过OA和短信通知。\n\n几点需要特别注意：\n\n- 证明材料需在就诊结束后**3个工作日内**补传，逾期且无合理理由会自第4个工作日按**事假**处理。\n- 如果请病假期间跨过周末或法定节假日，额度只扣除实际占用的**工作日**。\n- 病假工资按累计社会工龄分档，按**基本工资**的60%-100%发放（不满2年60%，满8年以上100%），具体以你当月工资核算为准。\n\n需要我帮你提交这个病假申请吗？如果需要，告诉我开始日期和原因即可（如",
+      "processing_time_ms": 9756,
+      "tokens_used": 8143,
+      "error": null
+    },
+    {
+      "case_id": "eval_003",
+      "query": "公司社保公积金缴纳比例是多少？",
+      "category": "hr",
+      "expected_agent": "hr_agent",
+      "actual_agent": "hr_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.8,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [
+        "薪酬福利说明.md"
+      ],
+      "retrieved_sources": [
+        "薪酬福利说明.md",
+        "年假管理制度.md",
+        "请假审批流程.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "公司社保和公积金的缴纳比例如下：\n\n## 社保（五险）缴费比例\n\n| 险种 | 个人缴费 | 单位缴费 |\n|------|---------|---------|\n| **养老保险** | 8% | 16% |\n| **医疗保险** | 2% | 8.5% |\n| **失业保险** | 0.5% | 0.5% |\n| **工伤保险** | 0%（个人不缴） | 0.2% ~ 1.9%（按行业浮动） |\n| **生育保险** | 0%（个人不缴） | 1% |\n\n个人社保合计扣款比例约为 **10.5%**，由公司代扣代缴；单位合计承担约 **26.2% ~ 27.9%**。\n\n## 公积金缴费比例\n\n| 项目 | 比例 |\n|------|------|\n| **个人缴存** | **12%**（固定，不可调整） |\n| **单位配比** | **12%** |\n| **月缴存合计** | 基数 × **24%**（个人+单位各12%） |\n\n## 缴费基数说明\n\n- **社保基数**：上年度月平均工资，下限为当地社平工资的 **60%**，上限为 **300%**，每年7月按最新数",
+      "processing_time_ms": 15161,
+      "tokens_used": 9120,
+      "error": null
+    },
+    {
+      "case_id": "eval_004",
+      "query": "年终奖什么时候发？",
+      "category": "hr",
+      "expected_agent": "hr_agent",
+      "actual_agent": "hr_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.75,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [
+        "薪酬福利说明.md"
+      ],
+      "retrieved_sources": [
+        "薪酬福利说明.md",
+        "病假和医疗期规定.md",
+        "请假审批流程.md",
+        "年假管理制度.md",
+        "入职与离职管理流程.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "年终奖通常在**春节前最后一个工作日**发放（也就是年终奖发放日）。\n\n几点需要留意：\n\n- **发放条件**：公司年度经营业绩净利润达成率须 **≥80%** 才会触发发放，同时与个人年度绩效评分挂钩。\n- **在职要求**：以发放日当天仍在职为准；**12月31日（含）之后入职**的员工不享受当年年终奖。\n- **计算方式**：年终奖 = 基本工资 ×（在职月数 / 12）× 绩效系数，绩效系数按年度综合绩效等级确定（A 级 3.0 至 E 级 0）。\n- 年内受到**记大过及以上处分**的，当年年终奖系数归零。\n\n如果你想核算自己大概能拿多少年终奖，或者对发放规则有疑问，可以告诉我你的基本工资和绩效等级，我帮你算一下。",
+      "processing_time_ms": 4885,
+      "tokens_used": 7815,
+      "error": null
+    },
+    {
+      "case_id": "eval_005",
+      "query": "迟到三次会怎么处理？",
+      "category": "hr",
+      "expected_agent": "hr_agent",
+      "actual_agent": "hr_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.75,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [
+        "考勤政策.md"
+      ],
+      "retrieved_sources": [
+        "考勤政策.md",
+        "薪酬福利说明.md",
+        "入职与离职管理流程.md",
+        "请假审批流程.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "关于\"迟到三次\"的处理，需要分两个层面来看：\n\n## 一、每次迟到的扣款标准（按单次时长）\n\n| 迟到时长 | 扣款金额 |\n|---------|---------|\n| 1 ~ 15 分钟 | 扣除当日餐补 **20元** |\n| 16 ~ 30 分钟 | 扣餐补 + 30元，共 **50元** |\n| 31 ~ 60 分钟 | 扣餐补 + 60元，共 **80元** |\n| 超过 60 分钟 | 直接视为**旷工半天**（扣半日基本工资 + 无餐补） |\n\n## 二、累计规则（关键）\n\n- 月累计迟到 **超过 3 次**，从**第 4 次起**，每次按**旷工半天**处理，即扣除**半日基本工资**且**无当日餐补**。\n- 也就是说：前 3 次迟到各自按上表标准扣款；一旦突破 3 次，第 4 次起性质升级为旷工，扣款金额显著增加。\n- 此外，只要有迟到记录，当月的 **全勤奖（200元/月）** 即不符合领取条件。\n\n⚠️ 举例：假设你日薪 200 元，当月第 4 次迟到（哪怕只有 5 分钟），扣款 = 半日基本工资 100 元 + 无餐补，还影响全勤奖。\n\n**需要我帮你联",
+      "processing_time_ms": 18283,
+      "tokens_used": 8499,
+      "error": null
+    },
+    {
+      "case_id": "eval_006",
+      "query": "帮我提交一个病假申请，明天请一天",
+      "category": "hr",
+      "expected_agent": "hr_agent",
+      "actual_agent": "hr_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.75,
+      "expected_tools": [
+        "submit_leave_request"
+      ],
+      "actual_tools": [
+        "get_leave_balance",
+        "check_policy",
+        "submit_leave_request"
+      ],
+      "tools_correct": true,
+      "expected_sources": [],
+      "retrieved_sources": [
+        "病假和医疗期规定.md",
+        "请假审批流程.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "✅ **病假申请已提交成功**\n\n| 项目 | 内容 |\n|------|------|\n| 申请编号 | **b00bfe7f5028** |\n| 假期类型 | 病假 |\n| 请假日期 | **2026-05-21**(明天,1天) |\n| 剩余病假 | 提交前 **5 天** → 提交后 **4 天** |\n| 审批层级 | 一级(直属上级审批) |\n\n📌 **两点提醒:**\n\n1. **证明材料**:病假需提供二级甲等及以上医院出具的病假条/诊断证明,并需在就诊结束后 **3 个工作日内** 通过 OA 系统上传。普通病假建议在休假开始前至少 1 个工作日完成申请,如果明天是突发情况就医,可走急诊病假流程(先电话报备直属上级,恢复后 **48 小时内**补交材料)。\n2. **工资计算**:病假工资按累计社会工龄比例发放(基本工资口径),具体比例取决于你的工龄档位。\n\n请记得按时补交病假证明,避免逾期被转为事假处理。\n\n**需要我帮你查询审批进度,或者有其他需要协助的吗?**",
+      "processing_time_ms": 16306,
+      "tokens_used": 27734,
+      "error": null
+    },
+    {
+      "case_id": "eval_007",
+      "query": "我的年假余额还有多少？",
+      "category": "hr",
+      "expected_agent": "hr_agent",
+      "actual_agent": "hr_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.75,
+      "expected_tools": [
+        "get_leave_balance"
+      ],
+      "actual_tools": [
+        "get_leave_balance"
+      ],
+      "tools_correct": true,
+      "expected_sources": [
+        "年假管理制度.md"
+      ],
+      "retrieved_sources": [
+        "年假管理制度.md",
+        "请假审批流程.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "张三，你好！你当前的假期余额如下：\n\n| 假期类型 | 剩余天数 |\n|---------|---------|\n| **年假** | **10 天** |\n| 病假 | 5 天 |\n| 事假 | 2 天 |\n\n补充两点提醒：\n\n- 年假需在**自然年内休完**，不可跨年度累积；如因工作原因无法安排，可在次年3月31日前申请补休，逾期作废。\n- 年假最小请假单位为 **0.5 天**（半天），可分段休。\n\n**需要我帮你提交请假申请吗？**",
+      "processing_time_ms": 3610,
+      "tokens_used": 16341,
+      "error": null
+    },
+    {
+      "case_id": "eval_008",
+      "query": "绩效考核结果怎么影响工资？",
+      "category": "hr",
+      "expected_agent": "hr_agent",
+      "actual_agent": "hr_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.8,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [
+        "绩效考核制度.md"
+      ],
+      "retrieved_sources": [
+        "考勤政策.md",
+        "薪酬福利说明.md",
+        "请假审批流程.md",
+        "绩效考核制度.md",
+        "入职与离职管理流程.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "绩效考核结果主要通过以下 4 个维度影响你的工资:\n\n## 1. 绩效奖金(最直接)\n\n**绩效奖金 = 绩效基数 × 绩效系数**,绩效系数由考核等级决定:\n\n| 等级 | 含义 | 绩效系数 | 示例(基数3000元) |\n|------|------|---------|-----------------|\n| S | 卓越 | **1.2** | 3600元 |\n| A | 优秀 | **1.1** | 3300元 |\n| B | 良好 | **1.0** | 3000元 |\n| C | 待改进 | **0.8** | 2400元 |\n| D | 不合格 | **0.5** | 1500元 |\n\n月度/季度考核结果影响绩效奖金,全年累计影响年终奖。\n\n## 2. 年度调薪\n\n- 连续两次 **A 及以上** → **优先调薪**\n- **C 及以下** → 暂缓调薪\n\n## 3. 晋升资格\n\n年度考核达到 **A 及以上** 是晋升的**必要条件之一**。\n\n## 4. 末位处理\n\n连续两次 **D** 会启动绩效改进计划(PIP,1-3个月),期满仍不达标才可能依法调整岗位或",
+      "processing_time_ms": 9512,
+      "tokens_used": 7702,
+      "error": null
+    },
+    {
+      "case_id": "eval_009",
+      "query": "新员工入职需要准备哪些材料？",
+      "category": "hr",
+      "expected_agent": "hr_agent",
+      "actual_agent": "hr_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.75,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [
+        "入职与离职管理流程.md"
+      ],
+      "retrieved_sources": [
+        "考勤政策.md",
+        "薪酬福利说明.md",
+        "请假审批流程.md",
+        "年假管理制度.md",
+        "入职与离职管理流程.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "新员工入职时需要准备以下材料:\n\n- **身份证**(原件及复印件)\n- **学历学位证**(原件及复印件)\n- **离职证明**(如有)\n- **银行卡**(用于工资发放)\n- **体检报告**\n- **一寸照片**\n- **个人信息表**(填写完整)\n\n另外提醒几点:\n\n- 入职当天流程包括:报到签到、提交材料、签订劳动合同与保密协议、领取办公设备和工牌、开通各类系统账号、参加入职引导培训。\n- 建议提前确认材料是否齐全,以免影响当天手续办理进度。\n- 如果在材料准备上有疑问,HR 在入职前发送的《入职通知书》中也会有详细说明,可以留意查收。\n\n有其他入职相关问题随时问我。",
+      "processing_time_ms": 4722,
+      "tokens_used": 7436,
+      "error": null
+    },
+    {
+      "case_id": "eval_010",
+      "query": "离职需要提前多少天通知？",
+      "category": "hr",
+      "expected_agent": "hr_agent",
+      "actual_agent": "hr_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.75,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [
+        "入职与离职管理流程.md"
+      ],
+      "retrieved_sources": [
+        "薪酬福利说明.md",
+        "入职与离职管理流程.md",
+        "年假管理制度.md",
+        "请假审批流程.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "根据公司《入职与离职管理流程》,离职提前通知期取决于你的在职状态:\n\n- **试用期员工**:提前 **3天** 通知\n- **转正员工**:提前 **30天** 以书面形式通知(在 OA 提交《离职申请单》或提交书面信函)\n\n几点补充:\n\n1. 通知期是为了安排工作交接,提前离开需与公司**协商一致**,未办交接擅自离职可能影响《离职证明》开具及薪资结算。\n2. 离职结算在最后工作日后 **15个工作日内** 完成,未休年假按日薪 **200%** 折算补偿。\n3. 正式员工建议尽早提交申请,给交接留足时间。\n\n**需要我帮你了解完整的离职申请流程或结算细节吗?**",
+      "processing_time_ms": 5784,
+      "tokens_used": 8387,
+      "error": null
+    },
+    {
+      "case_id": "eval_011",
+      "query": "笔记本蓝屏了，确认帮我创建报修工单",
+      "category": "it",
+      "expected_agent": "it_agent",
+      "actual_agent": "it_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.77,
+      "expected_tools": [
+        "create_ticket"
+      ],
+      "actual_tools": [
+        "create_ticket"
+      ],
+      "tools_correct": true,
+      "expected_sources": [
+        "报修指南.md"
+      ],
+      "retrieved_sources": [
+        "报修指南.md",
+        "网络和VPN配置.md",
+        "数据备份与恢复规范.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "✅ 报修工单已创建成功！\n\n| 项目 | 内容 |\n|------|------|\n| **工单号** | TK009 |\n| **故障类型** | 硬件报修（笔记本蓝屏） |\n| **优先级** | 中（P3） |\n| **处理人** | 已分配工程师（EMP005） |\n| **响应时效** | **4 小时内**工程师会联系您 |\n\n几点提醒：\n\n1. **补充信息**：如果方便，请在工单里补充蓝屏错误代码（如 `0x0000007E`）、发生时间和是否在安装软件后出现，能帮助工程师更快定位问题。\n2. **备份数据**：报修前请先把重要文件备份到 OneDrive/网络盘，若需重装系统，IT 不负责恢复未备份的个人数据。\n3. **跟踪进度**：可通过 IT 服务台「我的工单」或企业微信机器人输入 **TK009** 查看处理状态。\n\n如果工程师联系后仍未解决，随时告诉我，我可以帮您升级工单优先级。还有其他需要帮忙的吗？",
+      "processing_time_ms": 8054,
+      "tokens_used": 16129,
+      "error": null
+    },
+    {
+      "case_id": "eval_012",
+      "query": "公司VPN怎么配置？",
+      "category": "it",
+      "expected_agent": "it_agent",
+      "actual_agent": "it_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.76,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [
+        "网络和VPN配置.md"
+      ],
+      "retrieved_sources": [
+        "报修指南.md",
+        "网络和VPN配置.md",
+        "密码和账号管理.md",
+        "远程办公IT指南.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "公司 VPN 使用 **FortiGate SSL VPN（FortiVPN 客户端）**,接入后分配虚拟 IP `10.62.x.x`,并**强制启用双因素认证**(密码 + 手机验证码或硬件令牌)。以下是配置要点:\n\n## 适用场景(先确认是否需要)\n\n必须使用 VPN 的情况:\n1. 远程办公(在家/酒店接入 ERP、财务系统、代码仓库等内网资源)\n2. 出差期间访问内部文件服务器或邮件系统\n3. 访问仅限内网 IP 的站点(Jenkins、GitLab、Wiki 等)\n4. 安全审计类运维操作(登录堡垒机)\n\n**不需要 VPN**:仅查资料、收外部邮件,或已连接公司办公网时。\n\n## 配置步骤\n\n1. **安装客户端** — 下载并安装 FortiVPN 客户端(Windows 10/11 标准流程;Mac/Linux 参考附录 A),版本建议 **v7.0 以上**\n2. **配置连接** — 新建连接,输入 VPN 服务器地址,选择 SSL VPN 方式\n3. **认证登录** — 输入企业账号(AD 账号)+ 密码,并通过手机验证码或硬件令牌完成**双因素认证**\n4.",
+      "processing_time_ms": 14362,
+      "tokens_used": 8290,
+      "error": null
+    },
+    {
+      "case_id": "eval_013",
+      "query": "我想申领显示器，现在有货吗？",
+      "category": "it",
+      "expected_agent": "it_agent",
+      "actual_agent": "it_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.76,
+      "expected_tools": [
+        "check_device_inventory"
+      ],
+      "actual_tools": [
+        "check_device_inventory"
+      ],
+      "tools_correct": true,
+      "expected_sources": [
+        "设备申领流程.md"
+      ],
+      "retrieved_sources": [
+        "报修指南.md",
+        "设备申领流程.md",
+        "密码和账号管理.md",
+        "软件安装申请.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "好消息，**显示器有货** ✅\n\n当前库存情况：\n\n| 项目 | 数量 |\n|------|------|\n| 总库存 | **30 台** |\n| 可用库存 | **12 台** |\n| 品牌型号 | Dell U2723QE（27 英寸 4K） |\n\n两点提醒：\n\n- 您是工程部（技术/研发岗），标配即为 **27 英寸 4K 显示器 ×1**，这款 Dell U2723QE 正好符合岗位标配，可走标准申领流程，无需额外审批或差价。\n- 申领需说明用途，信息技术部会审核库存与部门预算，通过后安排到货/领取。\n\n**需要我帮你提交显示器申领申请吗？**",
+      "processing_time_ms": 8698,
+      "tokens_used": 15883,
+      "error": null
+    },
+    {
+      "case_id": "eval_014",
+      "query": "邮箱密码忘了怎么重置？",
+      "category": "it",
+      "expected_agent": "it_agent",
+      "actual_agent": "it_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.76,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [
+        "密码和账号管理.md"
+      ],
+      "retrieved_sources": [
+        "报修指南.md",
+        "网络和VPN配置.md",
+        "密码和账号管理.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "根据公司《密码和账号管理规范》,邮箱密码重置分两种情况,先走**自助重置**(首选),失败再走人工处理。\n\n**自助重置步骤(首选)**\n\n1. 访问 `https://password.company.com`(需在内网或 VPN 内)\n2. 输入工号,点击「发送验证码」\n3. 验证码发送至你**已登记的手机号**,30 秒内有效,每天最多发送 3 次\n4. 输入验证码 → 设置新密码(需满足复杂度要求)\n5. 新密码即时生效,旧密码立即失效\n\n**设置新密码时注意这些强制规则:**\n\n- 最小长度 **10 位**\n- 必须包含大写字母、小写字母、数字、特殊字符各至少 **1 个**\n- 不能包含姓名拼音、生日、手机号、连续数字/字母、键盘连续排列(如 qwerty)\n- 不能与最近 **10 次**历史密码相同或 80% 以上相似\n\n**如果自助重置不可用:**\n\n- 手机号未登记或已更换 → 自助重置无法使用,需要先联系 HR 在系统更新手机号,或走人工重置(携带工牌到 IT 前台,或通过公司邮箱发邮件至 it-support@company.com)\n- 每天自助重置限 **",
+      "processing_time_ms": 7024,
+      "tokens_used": 7562,
+      "error": null
+    },
+    {
+      "case_id": "eval_015",
+      "query": "打印机连不上怎么解决？",
+      "category": "it",
+      "expected_agent": "it_agent",
+      "actual_agent": "it_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.75,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [
+        "报修指南.md"
+      ],
+      "retrieved_sources": [
+        "报修指南.md",
+        "网络和VPN配置.md",
+        "软件安装申请.md",
+        "远程办公IT指南.md",
+        "数据备份与恢复规范.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "打印机连不上可以先按下面的步骤自排查,多数情况可以自己解决:\n\n1. **检查硬件状态**:确认打印机电源灯常亮、网络指示灯闪烁;灯不亮的话检查电源线和网络线是否插好。\n2. **检查默认打印机设置**:打开 控制面板 → 设备和打印机,找到对应打印机,右键 →「设置为默认打印机」,确认不是\"脱机使用打印机\"状态。\n3. **运行系统诊断**:右键打印机 →「打印疑难解答」,让 Windows 自动检测并修复。\n4. **测试网络连通性**:Win+R → 输入 cmd → 回车,执行 `ping 打印机IP地址`(IP 可查看打印机屏幕或向 IT 索取)。ping 不通说明网络层面有问题。\n5. **检查驱动状态**:打开设备管理器,看打印机设备是否有黄色感叹号,如有则重装驱动。\n\n如果以上步骤都试过仍无法解决,请告诉我打印机 IP 和具体的故障现象(比如是 ping 不通、还是显示脱机、还是打印任务卡住),我可以帮你创建报修工单,工程师会根据故障等级在相应时间内联系你(非紧急 P3 级别 **4 小时内**响应)。\n\n**需要我帮你创建报修工单吗?**",
+      "processing_time_ms": 5562,
+      "tokens_used": 7539,
+      "error": null
+    },
+    {
+      "case_id": "eval_016",
+      "query": "远程办公需要注意哪些安全规范？",
+      "category": "it",
+      "expected_agent": "it_agent",
+      "actual_agent": "it_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.75,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [
+        "远程办公IT指南.md"
+      ],
+      "retrieved_sources": [
+        "网络和VPN配置.md",
+        "密码和账号管理.md",
+        "软件安装申请.md",
+        "远程办公IT指南.md",
+        "数据备份与恢复规范.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "远程办公的安全规范主要集中在 **VPN 接入、设备管理、网络环境、数据保护** 四个方面,以下是核心要点:\n\n**1. VPN 接入(强制要求)**\n- 访问公司内网系统(OA、ERP、代码仓库、内部文档) **必须通过公司 VPN**\n- **禁止在公共 WiFi 下不开 VPN** 直接访问公司系统\n- 在公司办公区已连接办公网时,**禁止同时开启 VPN**(避免路由冲突)\n\n**2. 设备要求**\n- **优先使用公司配发设备**;个人设备需经 IT 审批并安装公司 EDR 和 VPN 客户端后才能使用\n- 操作系统、安全补丁保持最新,公司统一部署的杀毒软件(EDR)**必须保持运行**\n- 设备默认开启磁盘加密(BitLocker/FileVault)\n- 离开设备 **立即锁屏**,并设置 **5 分钟自动锁屏**\n\n**3. 网络环境**\n- 优先使用家庭宽带;**避免使用公共 WiFi**(咖啡厅、酒店、机场)\n- 如必须使用公共 WiFi,必须**先连 VPN 再访问公司资源**\n- **手机热点是公共 WiFi 的安全替代方案**\n\n**4. 数据与保密**\n- ",
+      "processing_time_ms": 10797,
+      "tokens_used": 7996,
+      "error": null
+    },
+    {
+      "case_id": "eval_017",
+      "query": "公司文件备份在哪里，怎么恢复误删的文件？",
+      "category": "it",
+      "expected_agent": "it_agent",
+      "actual_agent": "it_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.76,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [
+        "数据备份与恢复规范.md"
+      ],
+      "retrieved_sources": [
+        "报修指南.md",
+        "网络和VPN配置.md",
+        "密码和账号管理.md",
+        "设备申领流程.md",
+        "数据备份与恢复规范.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "公司文件备份和误删恢复,给你梳理一下:\n\n## 备份位置\n\n| 数据级别 | 存储位置 | 备份策略 |\n|---------|---------|---------|\n| 个人工作文件 | **OneDrive / 企业网盘**(每人 **1TB**) | 实时云端同步,删除进回收站保留 **90 天** |\n| 部门共享文档 | 部门共享空间(按权限访问) | 每日备份,保留 **≥ 6 个月** |\n| 核心数据(数据库/财务/源码) | 异地灾备机房 | 每日增量 + 每周全量,保留 **≥ 1 年** |\n\n需要特别注意:仅存在本地硬盘(桌面/文档)的文件**不在备份范围内**,硬盘损坏将无法恢复。\n\n## 误删文件恢复步骤\n\n1. **先查回收站(自助,最快)**:登录 OneDrive / 企业网盘,进入回收站找回 **90 天内**删除的文件。\n2. **历史版本回溯**:网络盘保留最近 **30 个版本**,可恢复到之前某个修改版本。\n3. **回收站已清空**:提交 IT 工单,注明**文件名、路径和删除时间**,IT 尝试从备份恢复。一般数据恢复响应 **1 个工",
+      "processing_time_ms": 8203,
+      "tokens_used": 7764,
+      "error": null
+    },
+    {
+      "case_id": "eval_018",
+      "query": "竞业限制协议的条款怎么解读？",
+      "category": "legal",
+      "expected_agent": "legal_agent",
+      "actual_agent": "legal_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.77,
+      "expected_tools": [],
+      "actual_tools": [
+        "search_contract",
+        "check_compliance"
+      ],
+      "tools_correct": true,
+      "expected_sources": [
+        "保密协议说明.md"
+      ],
+      "retrieved_sources": [
+        "合规检查清单.md",
+        "保密协议说明.md",
+        "知识产权政策.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "竞业限制协议是公司保护商业秘密的核心工具之一,我结合公司《保密协议管理制度》和合同条款库,帮你逐条拆解重点:\n\n## 一、谁需要签?——适用对象\n\n并不是所有员工都要签,只有以下三类(由法务部每季度更新《竞业限制岗位清单》):\n- **公司高管**:总监级及以上或实际履行高管职责的人员\n- **核心技术骨干**:掌握核心技术秘密、算法、关键客户资源或研发方向的人员\n- **其他敏感岗位**:核心销售、大客户经理、采购负责人、财务负责人等\n\n> 触发时机:**晋升或调入敏感岗位时**,或关键岗位**入职时**签署。\n\n## 二、核心条款逐项解读\n\n| 项目 | 标准 | 关键解读 |\n|------|------|---------|\n| **限制期限** | 离职后**不超过2年** | 从劳动关系结束次日起算;非法离职则以公司实际知悉日起算 |\n| **限制地域** | 公司主营业务覆盖范围 | 以公司已设办事处的城市清单 + 协议列明的未来2年规划市场为准 |\n| **经济补偿** | 按月支付,不低于离职前12个月**平均工资的30%** | 基数为全部税前收入(含奖金、津贴);",
+      "processing_time_ms": 15494,
+      "tokens_used": 13880,
+      "error": null
+    },
+    {
+      "case_id": "eval_019",
+      "query": "个人信息保护法对公司有什么要求？",
+      "category": "legal",
+      "expected_agent": "legal_agent",
+      "actual_agent": "legal_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.76,
+      "expected_tools": [],
+      "actual_tools": [
+        "search_contract",
+        "check_compliance"
+      ],
+      "tools_correct": true,
+      "expected_sources": [
+        "数据保护条例.md"
+      ],
+      "retrieved_sources": [
+        "合规检查清单.md",
+        "保密协议说明.md",
+        "数据保护条例.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "根据公司《数据保护条例》(依据《个人信息保护法》《数据安全法》《网络安全法》制定),《个人信息保护法》对公司的要求主要体现在以下几个方面:\n\n## 一、数据收集环节\n\n- **最小必要原则**:只能收集与业务目的直接相关的最少信息。比如招聘时收集姓名、联系方式、教育背景即可,**禁止**收集婚姻状况、宗教信仰等无关信息。\n- **授权要求**:\n  - 一般个人信息 → 隐私政策提示或默认同意\n  - **敏感个人信息**(身份证号、生物识别、医疗记录等)→ **必须单独明示同意**,不得与一般条款捆绑\n  - 员工个人信息 → 入职时签署《个人信息授权使用书》\n  - 客户数据 → 在注册、下单环节获取授权\n\n## 二、数据存储环节\n\n| 数据类型 | 保存期限 | 加密要求 |\n|---------|---------|---------|\n| 员工个人信息 | 离职后保存 **2年** | 敏感信息强制 **AES-256 加密** |\n| 客户交易数据 | **5年** | 传输层加密(TLS 1.2+) |\n| 日志数据 | **6个月** | — |\n| 合同相关数据 | ",
+      "processing_time_ms": 14278,
+      "tokens_used": 14796,
+      "error": null
+    },
+    {
+      "case_id": "eval_020",
+      "query": "签合同时要注意哪些合规问题？",
+      "category": "legal",
+      "expected_agent": "legal_agent",
+      "actual_agent": "legal_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.76,
+      "expected_tools": [],
+      "actual_tools": [
+        "search_contract",
+        "check_compliance"
+      ],
+      "tools_correct": true,
+      "expected_sources": [
+        "合同审批流程.md"
+      ],
+      "retrieved_sources": [
+        "劳动合同管理办法.md",
+        "合同审批流程.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "基于知识库材料,我来为你系统梳理签合同时需要重点关注的合规问题。\n\n## 签合同的合规要点清单\n\n### 1. 合同分类与审批层级(先看金额再走流程)\n\n| 合同类型 | 金额/期限标准 | 必须经过的审批节点 |\n|---------|-------------|-------------------|\n| 常规合同 | ≤50万元,且≤1年 | 部门负责人 + 法务审核 |\n| 重大合同 | 50万~500万元,或1~3年 | 部门负责人 + 法务 + 财务 + 分管副总 |\n| 战略合同 | >500万元,或>3年,或涉核心资产/技术 | 董事会 + 总经理会签 |\n| 紧急合同 | 应急≤5万元 | 直线经理先批,3个工作日内补齐流程 |\n\n关键提醒:**同一合作方年度累计金额超过上限,必须按更高类别重新审批**,隐瞒累计金额会按违规处理。含自动续期的合同,期限按\"初始期限+预计续期\"计算(上限5年)。\n\n### 2. 模板与条款合规\n\n- **优先使用公司标准模板**(OA合同模块共10类模板)。用对方模板须**提前3个工作日**提交法务部审查,意见分\"建议直接使用/需修改后",
+      "processing_time_ms": 11922,
+      "tokens_used": 13448,
+      "error": null
+    },
+    {
+      "case_id": "eval_021",
+      "query": "员工数据能存到境外服务器吗？",
+      "category": "legal",
+      "expected_agent": "legal_agent",
+      "actual_agent": "legal_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.76,
+      "expected_tools": [],
+      "actual_tools": [
+        "check_compliance",
+        "search_contract",
+        "search_contract"
+      ],
+      "tools_correct": true,
+      "expected_sources": [
+        "数据保护条例.md"
+      ],
+      "retrieved_sources": [
+        "员工纪律处分条例.md",
+        "劳动合同管理办法.md",
+        "数据保护条例.md",
+        "合规检查清单.md",
+        "合同审批流程.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "根据现有资料,**员工数据默认不能存储到境外服务器**,这属于典型的\"数据出境\"场景,受《个人信息保护法》及公司制度的严格管控。具体分析如下:\n\n## 结论\n\n**原则上禁止**,除非完成法定的出境合规程序,且公司合同层面还有更严的限制(详见下文)。\n\n## 关键依据\n\n**1. 公司合同条款明确禁止**\n合同条款库中《数据处理协议》附录A规定:**\"禁止将个人信息传输至境外服务器\"**。这意味着在现行合同框架下,员工数据出境在合同层面是不被允许的,即使走合规程序,也需要先突破合同约定,须经法务部审核。\n\n**2. 即使\"内部系统\"也属于出境**\n注意一个常见误区:即便数据是通过**集团海外HR系统**等公司内部系统处理,只要数据落地到境外,仍然属于数据出境,同样需要申报,不能以\"内部系统\"为由规避。\n\n**3. 法定合规路径(若确有业务必要)**\n按《数据保护条例》,个人信息出境必须满足以下**条件之一**:\n\n| 合规路径 | 适用场景 |\n|---------|---------|\n| 安全评估 | 处理100万以上用户个人信息、关键信息基础设施运营者,须通过国家网信办评估 |\n",
+      "processing_time_ms": 15452,
+      "tokens_used": 20203,
+      "error": null
+    },
+    {
+      "case_id": "eval_022",
+      "query": "保密协议包含哪些内容？",
+      "category": "legal",
+      "expected_agent": "legal_agent",
+      "actual_agent": "legal_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.76,
+      "expected_tools": [],
+      "actual_tools": [
+        "search_contract",
+        "search_contract"
+      ],
+      "tools_correct": true,
+      "expected_sources": [
+        "保密协议说明.md"
+      ],
+      "retrieved_sources": [
+        "员工纪律处分条例.md",
+        "保密协议说明.md",
+        "知识产权政策.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "根据《保密协议管理制度》(v2.0)和合同条款库的比对,公司保密协议的核心内容可以归纳为以下几大模块:\n\n## 1. 协议类型与适用对象\n公司共有**四类保密协议**,签署对象不同:\n- **员工保密协议** — 全体员工入职时签署\n- **竞业禁止协议** — 高管/核心技术骨干/法务部认定岗位\n- **业务保密协议** — 合作伙伴/供应商/客户\n- **研发保密协议** — 外包团队/联合研发方/外部顾问\n\n## 2. 保密范围(什么是保密信息)\n员工须对所有**未公开、具有商业价值**的信息保密,分四类:\n- **技术信息**:源代码、算法、电路设计、配方、测试数据等\n- **经营信息**:客户名单、供应商价格表、营销策略、投标标底等\n- **财务信息**:财务报表、成本结构、利润分析等\n- **管理信息**:薪酬架构、绩效考核结果、组织调整方案等\n\n例外:已公开信息、入职前合法持有的信息、独立研发成果(需书面证明)不属于保密信息。\n\n## 3. 保密义务(红线行为)\n- **不得披露**:未经书面授权不得向任何第三方透露\n- **不得利用**:不得用于工作职责以外的目的(个人",
+      "processing_time_ms": 11797,
+      "tokens_used": 13840,
+      "error": null
+    },
+    {
+      "case_id": "eval_023",
+      "query": "劳动合同到期不续签有补偿吗？",
+      "category": "legal",
+      "expected_agent": "legal_agent",
+      "actual_agent": "legal_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.76,
+      "expected_tools": [],
+      "actual_tools": [
+        "search_contract",
+        "search_contract"
+      ],
+      "tools_correct": true,
+      "expected_sources": [
+        "劳动合同管理办法.md"
+      ],
+      "retrieved_sources": [
+        "劳动合同管理办法.md",
+        "合同审批流程.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "根据《劳动合同法》及相关规定,劳动合同到期不续签,**是否需要支付经济补偿,关键看\"谁不续签、条件是否变化\"**,不能一概而论。以下是判断逻辑:\n\n## 到期不续签的补偿判断\n\n| 情形 | 是否需支付经济补偿 |\n|------|------------------|\n| **公司决定不续签** | ✅ **必须支付**(每满1年支付1个月工资) |\n| 公司**维持或提高**原条件续签,但**员工拒绝** | ❌ 无需支付 |\n| 公司**降低**原条件续签(如降薪),员工拒绝 | ✅ **必须支付** |\n\n## 经济补偿的计算标准\n\n- **计算基数**:按离职前 **12个月平均应发工资**(含奖金、津贴等)\n- **计算年限**:每满1年支付 **1个月工资**;满6个月不满1年按1年算;**不满6个月**支付 **半个月工资**\n- **上限规则**:月工资高于当地社平工资 **3倍** 的,按3倍封顶,且年限最高不超过 **12年**\n\n## 几点补充提醒\n\n1. 如果公司不续签,员工**无需主动辞职**,应让公司出具《终止劳动合同通知书》,否则可能影响补偿主张。\n2.",
+      "processing_time_ms": 12283,
+      "tokens_used": 13402,
+      "error": null
+    },
+    {
+      "case_id": "eval_024",
+      "query": "旷工三天会被开除吗？",
+      "category": "legal",
+      "expected_agent": "legal_agent",
+      "actual_agent": "legal_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.76,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [
+        "员工纪律处分条例.md"
+      ],
+      "retrieved_sources": [
+        "员工纪律处分条例.md",
+        "劳动合同管理办法.md",
+        "知识产权政策.md",
+        "数据保护条例.md",
+        "合规检查清单.md",
+        "合同审批流程.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "是的,**连续旷工 3 天**已构成公司可以解除劳动合同的情形。具体依据如下:\n\n**考勤违纪的处分梯度(《员工纪律处分条例》):**\n\n| 行为 | 处分 |\n|------|------|\n| 旷工 1 天 | 书面警告 |\n| **连续旷工 3 天** | **可解除劳动合同** |\n| 一年内**累计旷工 7 天** | **可解除劳动合同** |\n\n几点需要特别注意:\n\n1. **\"连续\"是关键**——如果只是偶尔、非连续地缺勤,不触发这条;但一年内累计达到 7 天同样会被解除。\n2. **\"可解除\"而非\"必须解除\"**——公司有权根据情节决定是否解除,但涉及解除劳动合同的,须经**法务部审核合规性**,并履行书面告知、给予申辩机会等程序。\n3. **你有程序性权利**——公司须书面告知违纪事实,你有 **5 个工作日**提出书面申辩;收到处分决定后,还可在 **7 个工作日**内向 HR 提交申诉。\n\n如果你正在经历类似情况,需要我帮你梳理应对思路或向 HR、法务部进一步核实吗?",
+      "processing_time_ms": 10161,
+      "tokens_used": 7066,
+      "error": null
+    },
+    {
+      "case_id": "eval_025",
+      "query": "出差住宿标准是多少？",
+      "category": "finance",
+      "expected_agent": "finance_agent",
+      "actual_agent": "finance_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.77,
+      "expected_tools": [],
+      "actual_tools": [
+        "query_expense_policy"
+      ],
+      "tools_correct": true,
+      "expected_sources": [
+        "出差管理制度.md"
+      ],
+      "retrieved_sources": [
+        "报销管理制度.md",
+        "出差管理制度.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "出差住宿标准是按**城市等级**分档的,和职级无关。标准如下:\n\n| 城市等级 | 住宿标准(每晚) | 覆盖城市 |\n|---------|--------------|---------|\n| 一线 | ≤ **600元** | 北京、上海、广州、深圳 |\n| 新一线 | ≤ **450元** | 杭州、成都、武汉、南京、苏州等 |\n| 二线 | ≤ **400元** | 各省会及计划单列市 |\n| 其他 | ≤ **300元** | 其余城市 |\n\n几个需要留意的点:\n\n1. 住宿费凭**酒店发票据实报销**,不超过对应城市标准,超标部分原则上自理。\n2. 如确因客观原因(如展会期间酒店紧张)超标,需**提前申请**并经部门总监批准,最多可上浮 **20%**。\n3. 出差地有公司分支机构或合作宿舍的,应优先入住,不再报销酒店费用。\n4. 同性别同事同地出差鼓励合住标准间,合住的可各自享受标准的 **80%** 作为补贴激励。\n\n你准备去哪个城市、出差几天?我可以帮你查一下具体可执行的标准,或者需要我帮你提交出差申请/差旅报销吗?",
+      "processing_time_ms": 10161,
+      "tokens_used": 15481,
+      "error": null
+    },
+    {
+      "case_id": "eval_026",
+      "query": "报销需要什么发票？",
+      "category": "finance",
+      "expected_agent": "finance_agent",
+      "actual_agent": "finance_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.77,
+      "expected_tools": [],
+      "actual_tools": [
+        "query_expense_policy"
+      ],
+      "tools_correct": true,
+      "expected_sources": [
+        "报销管理制度.md"
+      ],
+      "retrieved_sources": [
+        "报销管理制度.md",
+        "出差管理制度.md",
+        "预算管理制度.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "报销对发票的要求,核心是**合规、真实、抬头正确**,具体如下:\n\n## 发票基本要求\n\n| 项目 | 要求 |\n|------|------|\n| 发票类型 | 增值税普通发票或增值税专用发票(一般纳税人优先取得**专票**,可抵扣进项税) |\n| 发票抬头 | 必须为公司**全称**「XX科技有限公司」,不接受个人抬头或简称 |\n| 税号 | 开票时须提供公司纳税人识别号 |\n| 提交时限 | 发票日期在费用发生后 **30天内** 提交,跨月不跨年 |\n| 电子发票 | 需打印纸质件并由报销人签字;系统校验发票号,**同一张不得重复报销** |\n\n## 以下发票不予受理\n\n- 抬头错误、税号缺失或错误\n- 发票项目与实际消费不符(如餐饮开成办公用品)\n- 发票模糊、涂改、缺联、连号异常\n- 定额发票、收据等无法验真的凭证(特殊情况需附说明并经财务总监特批)\n- **超过开票日期 180 天**仍未提交的发票\n\n## 特殊场景提醒\n\n- **业务招待餐饮费**:需附消费清单(菜品明细);个人误餐费定额标准内可不附清单,但需说明事由\n- **差旅住宿**:凭酒店发票据实报销,发票日期",
+      "processing_time_ms": 10176,
+      "tokens_used": 13412,
+      "error": null
+    },
+    {
+      "case_id": "eval_027",
+      "query": "我要提交差旅报销：打车费 200 元，8月5日拜访客户",
+      "category": "finance",
+      "expected_agent": "finance_agent",
+      "actual_agent": "finance_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.8,
+      "expected_tools": [
+        "submit_expense_report"
+      ],
+      "actual_tools": [
+        "submit_expense_report"
+      ],
+      "tools_correct": true,
+      "expected_sources": [],
+      "retrieved_sources": [
+        "报销管理制度.md",
+        "出差管理制度.md",
+        "预算管理制度.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "您的差旅报销申请已成功提交 ✅\n\n- **报销单号**:ad7b09d373ce\n- **报销类型**:差旅费\n- **金额**:**200 元**(打车费)\n- **费用说明**:8月5日拜访客户打车费\n- **当前状态**:等待审批(共 1 步,直属上级审批)\n\n几点提醒:\n\n1. **发票附件**:打车费需附上发票或行程单,建议尽快在 OA 报销单中补传,方便审批人核对。\n2. **审批时效**:直属上级会在 **1 个工作日**内审批,财务审核通过后 **3 个工作日内**打款至工资卡。\n3. **注意时限**:发票需在费用发生后 **30 天内**提交,您这笔在时限内,没有问题。\n\n如后续还需报销其他费用或查询审批进度,随时告诉我。",
+      "processing_time_ms": 8866,
+      "tokens_used": 13550,
+      "error": null
+    },
+    {
+      "case_id": "eval_028",
+      "query": "部门预算还剩多少？",
+      "category": "finance",
+      "expected_agent": "finance_agent",
+      "actual_agent": "finance_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.76,
+      "expected_tools": [
+        "check_budget"
+      ],
+      "actual_tools": [
+        "check_budget"
+      ],
+      "tools_correct": true,
+      "expected_sources": [
+        "预算管理制度.md"
+      ],
+      "retrieved_sources": [
+        "预算管理制度.md",
+        "采购流程规范.md",
+        "出差管理制度.md",
+        "报销管理制度.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "工程部 **2026 年预算** 使用情况如下:\n\n| 预算类别 | 预算总额 | 已用 | 剩余 | 使用率 |\n|---------|--------|------|------|--------|\n| 办公费用 | 50,000 | 12,000 | 38,000 | 24% |\n| 差旅费用 | 80,000 | 35,000 | 45,000 | 43.8% |\n| **合计** | **130,000** | **47,000** | **83,000** | **36.2%** |\n\n几点说明:\n\n- 部门整体剩余预算 **83,000 元**,使用率约 **36%**,按制度要求年中(6月)执行率应接近 50%,当前进度略缓,额度相当充裕。\n- 差旅费使用率(43.8%)明显高于办公费(24%),后续差旅支出需留意,但距离预警线(80%)还有较大空间。\n- 办公费用剩余 **38,000 元**,如需采购办公用品可正常走流程。\n\n**需要我帮你查某项具体支出的报销标准或提交报销申请吗?**",
+      "processing_time_ms": 5997,
+      "tokens_used": 14857,
+      "error": null
+    },
+    {
+      "case_id": "eval_029",
+      "query": "北京出差住宿每晚限额多少？",
+      "category": "finance",
+      "expected_agent": "finance_agent",
+      "actual_agent": "finance_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.76,
+      "expected_tools": [],
+      "actual_tools": [
+        "check_travel_policy"
+      ],
+      "tools_correct": true,
+      "expected_sources": [
+        "出差管理制度.md"
+      ],
+      "retrieved_sources": [
+        "报销管理制度.md",
+        "出差管理制度.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "根据《出差管理制度》,北京属于**一线城市**,住宿标准为 **≤ 600 元/晚**(凭酒店发票据实报销,不超过该标准)。\n\n几点补充:\n\n- **超标处理**:如因展会等客观原因酒店紧张,需提前申请并经部门总监批准,最多可上浮 **20%**(即最高 720 元/晚)。\n- **合住激励**:同性别同事同地出差鼓励合住标准间,合住者各自可按标准的 **80%** 享受补贴激励。\n- **优先入住**:若出差地有公司分支机构或合作宿舍,应优先入住,不再报销酒店费用。\n- 出差结束后需在 **5 个工作日内** 提交差旅费报销。\n\n**需要我帮你查询其他城市的出差标准,或帮你提交出差申请吗?**",
+      "processing_time_ms": 5796,
+      "tokens_used": 14452,
+      "error": null
+    },
+    {
+      "case_id": "eval_030",
+      "query": "我的工资是怎么构成的？",
+      "category": "finance",
+      "expected_agent": "finance_agent",
+      "actual_agent": "finance_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.76,
+      "expected_tools": [
+        "query_salary_structure"
+      ],
+      "actual_tools": [
+        "query_salary_structure"
+      ],
+      "tools_correct": true,
+      "expected_sources": [
+        "薪资结构说明.md"
+      ],
+      "retrieved_sources": [
+        "薪资结构说明.md",
+        "预算管理制度.md",
+        "采购流程规范.md",
+        "报销管理制度.md",
+        "出差管理制度.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "根据系统查询,你的薪资构成如下(工程部 P3):\n\n## 你的月度薪资构成\n\n| 项目 | 金额(元) | 说明 |\n|------|---------|------|\n| 基本工资 | **12,000** | 固定,按职级确定 |\n| 岗位津贴 | **1,200** | 固定,按岗位性质发放 |\n| **应发工资** | **13,200** | 基本工资 + 岗位津贴(当前无绩效浮动项) |\n\n## 实发工资的计算方式\n\n> 实发工资 = 应发工资 − 社保个人部分 − 公积金个人部分 − 个税 − 其他代扣\n\n| 扣除项目 | 估算金额(元) | 比例 |\n|---------|------------|------|\n| 社保个人部分(养老8% + 医疗2% + 失业0.5%) | **1,386** | 约 10.5% |\n| 公积金个人部分 | **1,320** | 10% |\n\n以当前数据估算,你每月税前 **13,200 元**,扣除社保和公积金约 **2,706 元** 后,还需按累计预扣法缴纳个税(起征点 5,000 元/月,具体金额取决于全年累计收入和专项附",
+      "processing_time_ms": 11336,
+      "tokens_used": 14952,
+      "error": null
+    },
+    {
+      "case_id": "eval_031",
+      "query": "你好",
+      "category": "fallback",
+      "expected_agent": "fallback",
+      "actual_agent": "fallback",
+      "routing_correct": true,
+      "routing_method": "greeting",
+      "routing_confidence": 1.0,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [],
+      "retrieved_sources": [],
+      "retrieval_correct": true,
+      "answer": "",
+      "processing_time_ms": 0,
+      "tokens_used": 0,
+      "error": null
+    },
+    {
+      "case_id": "eval_032",
+      "query": "谢谢你的帮助",
+      "category": "fallback",
+      "expected_agent": "fallback",
+      "actual_agent": "fallback",
+      "routing_correct": true,
+      "routing_method": "llm",
+      "routing_confidence": 1.0,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [],
+      "retrieved_sources": [],
+      "retrieval_correct": true,
+      "answer": "",
+      "processing_time_ms": 2949,
+      "tokens_used": 0,
+      "error": null
+    },
+    {
+      "case_id": "eval_033",
+      "query": "今天晚饭吃什么？",
+      "category": "fallback",
+      "expected_agent": "fallback",
+      "actual_agent": "fallback",
+      "routing_correct": true,
+      "routing_method": "llm",
+      "routing_confidence": 0.95,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [],
+      "retrieved_sources": [],
+      "retrieval_correct": true,
+      "answer": "",
+      "processing_time_ms": 4172,
+      "tokens_used": 0,
+      "error": null
+    },
+    {
+      "case_id": "eval_034",
+      "query": "我请病假顺便笔记本报修",
+      "category": "cross",
+      "expected_agent": "hr_agent",
+      "actual_agent": "hr_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.8,
+      "expected_tools": [],
+      "actual_tools": [
+        "get_leave_balance",
+        "get_org_chain",
+        "get_leave_balance",
+        "get_leave_balance",
+        "get_leave_balance",
+        "get_leave_balance"
+      ],
+      "tools_correct": true,
+      "expected_sources": [],
+      "retrieved_sources": [
+        "病假和医疗期规定.md",
+        "请假审批流程.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "好的，我帮你分两部分处理：**病假申请** 和 **笔记本报修**。\n\n---\n\n### 📋 病假申请\n\n已查到你的病假余额：**剩余 5 天**。\n\n根据公司制度，申请病假需要注意以下几点：\n- **普通病假**需在休假开始前 **至少1个工作日** 提交申请。\n- 需提供 **二级甲等及以上医院** 出具的病假条/诊断证明。\n- 连续请假 **≥5个工作日** 的，还需额外提供医院开具的**治疗计划**及**建议恢复工作时间**的书面说明。\n- 病假 ≤3个工作日，直属上级审批即可（你的直属上级是李四）。\n\n**需要我帮你提交病假申请吗？** 如果需要，请告诉我：\n1. 请假的**起止日期**\n2. 是否需要注明**请假原因**\n\n---\n\n### 💻 笔记本报修\n\n请先试试以下排查步骤：\n1. **重启电脑**——很多临时性故障重启后会自动恢复。\n2. 检查**电源适配器**和电池状态，确认是否正常充电。\n3. 观察是否有**蓝屏错误代码**或异常提示音，记录下来。\n\n如果排查后问题仍然存在，**需要我帮你创建报修工单吗？** 如需创建，请简单描述一下故障现象（比如蓝屏、无法开机",
+      "processing_time_ms": 35046,
+      "tokens_used": 58746,
+      "error": null
+    },
+    {
+      "case_id": "eval_035",
+      "query": "合同审批没过影响年终奖吗？",
+      "category": "cross",
+      "expected_agent": "legal_agent",
+      "actual_agent": "legal_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.8,
+      "expected_tools": [],
+      "actual_tools": [
+        "search_contract",
+        "search_contract",
+        "search_contract",
+        "search_contract",
+        "search_contract",
+        "search_contract"
+      ],
+      "tools_correct": true,
+      "expected_sources": [],
+      "retrieved_sources": [
+        "劳动合同管理办法.md",
+        "合同审批流程.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "根据现有的合同管理相关制度，**合同审批没通过本身不会直接扣除年终奖**，但需要区分具体情况：\n\n## 可能间接影响年终奖的情形\n\n- **若审批未通过是因为违反了明确的制度规定**（如隐瞒累计金额、超期未补齐紧急合同材料、未设置关键节点提醒导致延误），制度中写明会\"追究相关人员责任\"或\"按《违规处罚条例》处理\"。这种情况下，如果被认定为**违规或重大工作失误**，可能会影响你的**年度绩效考核结果**，进而间接影响年终奖评定。\n- **若只是正常退补修改**（如材料不完整被退回、法务要求修改条款），这种情况属于日常工作流程的一部分，只要在时限内完成修正并重新提交，**不应影响绩效或年终奖**。\n\n## 不受影响的典型情况\n\n- 合同因商业条件未谈拢被否决\n- 法务提出修改意见后你按时修改并重新提交\n- 因对方资质问题导致审批中止\n\n## 需要注意的风险点\n\n- 同一合同退补次数累计**超过3次**，需分管副总特批，这种情况可能会被管理层关注\n- 审批时长从第一次提交完整材料起算，**补正后重新计次**，建议提交前仔细核验材料完整性，避免反复退补\n\n---\n\n如果你担心的是某次具体的合",
+      "processing_time_ms": 22997,
+      "tokens_used": 43535,
+      "error": null
+    },
+    {
+      "case_id": "eval_036",
+      "query": "出差期间设备坏了怎么报修和报销？",
+      "category": "cross",
+      "expected_agent": "it_agent",
+      "actual_agent": "it_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.85,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [],
+      "retrieved_sources": [
+        "报修指南.md",
+        "网络和VPN配置.md",
+        "数据备份与恢复规范.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "出差期间设备坏了,报修和报销是两条线,我分开给你梳理:\n\n## 一、出差期间报修流程\n\n1. **线上报修(首选)**:访问 IT 服务台 https://it.company.com,用企业账号登录后提交工单。描述中务必包含:故障发生时间、错误提示、已尝试的排查步骤、影响范围。\n2. **紧急情况直接电话**:如果故障导致关键业务完全中断(P1/P2 级别),拨打 IT 热线 **400-xxx-xxxx**(工作日 8:30~18:00);非工作时间仅 P1 紧急故障拨打值班手机,且需部门负责人确认。\n3. **多人故障特殊通道**:如果故障同时影响 **≥3 位同事**,不要提交工单,直接拨打热线,避免延误。\n4. **备用设备支持**:P1/P2 故障且无替代方案时,IT 可提供备用笔记本、键盘、鼠标等,**需在 3 个工作日内归还**并完成数据迁移。\n\n⚠️ 注意:报修前先自行排查并**备份重要数据**至 OneDrive 或共享服务器;维修涉及重装系统时,IT 不负责恢复未备份的个人文件。\n\n## 二、费用报销部分\n\n需要说明:根据现有资料,**出差期间设备损坏的维修费用报",
+      "processing_time_ms": 12295,
+      "tokens_used": 8541,
+      "error": null
+    },
+    {
+      "case_id": "eval_037",
+      "query": "离职时未休年假怎么结算，需要走什么流程？",
+      "category": "cross",
+      "expected_agent": "hr_agent",
+      "actual_agent": "hr_agent",
+      "routing_correct": true,
+      "routing_method": "keyword",
+      "routing_confidence": 0.85,
+      "expected_tools": [],
+      "actual_tools": [],
+      "tools_correct": true,
+      "expected_sources": [],
+      "retrieved_sources": [
+        "年假管理制度.md",
+        "请假审批流程.md"
+      ],
+      "retrieval_correct": true,
+      "answer": "关于离职时未休年假的处理,**核心看离职情形**,不同情形结算标准差别很大。我帮你梳理如下:\n\n## 结算规则对比\n\n| 离职情形 | 未休年假处理 |\n|---------|------------|\n| 主动离职 / 非严重违纪被解除合同 | 按日薪 **200%** 折算现金补偿 |\n| 因严重违纪被辞退 | **不予补偿**,但超休部分公司有权扣回 |\n| 主动书面放弃年假 | 按日薪 **100%** 支付(非200%) |\n\n## 关键计算方式\n\n- **日薪 = 离职前12个月平均工资(含奖金、津贴、加班费,不含福利)÷ 21.75**\n- 补偿金额 = 日薪 × 未休年假天数 × 200%\n- 举例:月均工资 10000 元,日薪约 459.77 元,未休 5 天年假 → 补偿约 **4597.7 元**\n\n## 其他要点\n\n- 已休年假**超过**应得天数的,不要求返还,但解除协议中需注明\"已足额享受年假\"\n- 严重违纪被辞退时超休部分,按日薪 100% 从离职结算工资中扣除,且需你签字确认\n- 补偿**必须货币形式**支付,不得以购物卡、实物等替代\n- 若选择主动放",
+      "processing_time_ms": 16876,
+      "tokens_used": 9485,
+      "error": null
+    }
+  ],
+  "errors": []
+}

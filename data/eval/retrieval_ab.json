@@ -1,0 +1,1245 @@
+{
+  "hits": {
+    "vector": {
+      "1": 27,
+      "3": 31,
+      "5": 32,
+      "10": 32
+    },
+    "bm25": {
+      "1": 24,
+      "3": 30,
+      "5": 31,
+      "10": 32
+    },
+    "hybrid": {
+      "1": 30,
+      "3": 32,
+      "5": 32,
+      "10": 32
+    }
+  },
+  "total": {
+    "vector": 32,
+    "bm25": 32,
+    "hybrid": 32
+  },
+  "details": [
+    {
+      "id": "hard_001",
+      "query": "怀孕休假最多能休多久？",
+      "agent": "hr_agent",
+      "expected_sources": [
+        "请假审批流程.md"
+      ],
+      "vector": {
+        "sources": [
+          "请假审批流程.md",
+          "年假管理制度.md",
+          "病假和医疗期规定.md",
+          "年假管理制度.md",
+          "请假审批流程.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "年假管理制度.md",
+          "请假审批流程.md",
+          "薪酬福利说明.md",
+          "请假审批流程.md",
+          "薪酬福利说明.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "年假管理制度.md",
+          "请假审批流程.md",
+          "薪酬福利说明.md",
+          "请假审批流程.md",
+          "薪酬福利说明.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_002",
+      "query": "结婚要请假，公司给几天？",
+      "agent": "hr_agent",
+      "expected_sources": [
+        "请假审批流程.md"
+      ],
+      "vector": {
+        "sources": [
+          "请假审批流程.md",
+          "薪酬福利说明.md",
+          "年假管理制度.md",
+          "年假管理制度.md",
+          "病假和医疗期规定.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "请假审批流程.md",
+          "请假审批流程.md",
+          "请假审批流程.md",
+          "请假审批流程.md",
+          "请假审批流程.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "请假审批流程.md",
+          "请假审批流程.md",
+          "请假审批流程.md",
+          "请假审批流程.md",
+          "请假审批流程.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_003",
+      "query": "被裁员了有补偿吗？",
+      "agent": "hr_agent",
+      "expected_sources": [
+        "入职与离职管理流程.md"
+      ],
+      "vector": {
+        "sources": [
+          "年假管理制度.md",
+          "入职与离职管理流程.md",
+          "薪酬福利说明.md",
+          "年假管理制度.md",
+          "薪酬福利说明.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "入职与离职管理流程.md",
+          "薪酬福利说明.md",
+          "考勤政策.md",
+          "绩效考核制度.md",
+          "年假管理制度.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "入职与离职管理流程.md",
+          "薪酬福利说明.md",
+          "年假管理制度.md",
+          "年假管理制度.md",
+          "年假管理制度.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_004",
+      "query": "绩效分数低会被辞退吗？",
+      "agent": "hr_agent",
+      "expected_sources": [
+        "绩效考核制度.md"
+      ],
+      "vector": {
+        "sources": [
+          "绩效考核制度.md",
+          "绩效考核制度.md",
+          "绩效考核制度.md",
+          "绩效考核制度.md",
+          "考勤政策.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "绩效考核制度.md",
+          "入职与离职管理流程.md",
+          "薪酬福利说明.md",
+          "年假管理制度.md",
+          "年假管理制度.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "绩效考核制度.md",
+          "薪酬福利说明.md",
+          "绩效考核制度.md",
+          "入职与离职管理流程.md",
+          "绩效考核制度.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_005",
+      "query": "每天几点上班几点下班？",
+      "agent": "hr_agent",
+      "expected_sources": [
+        "考勤政策.md"
+      ],
+      "vector": {
+        "sources": [
+          "考勤政策.md",
+          "考勤政策.md",
+          "考勤政策.md",
+          "考勤政策.md",
+          "考勤政策.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "考勤政策.md",
+          "考勤政策.md",
+          "请假审批流程.md",
+          "考勤政策.md",
+          "薪酬福利说明.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "考勤政策.md",
+          "考勤政策.md",
+          "考勤政策.md",
+          "请假审批流程.md",
+          "考勤政策.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_006",
+      "query": "新员工入职第一天要带什么？",
+      "agent": "hr_agent",
+      "expected_sources": [
+        "入职与离职管理流程.md"
+      ],
+      "vector": {
+        "sources": [
+          "入职与离职管理流程.md",
+          "年假管理制度.md",
+          "入职与离职管理流程.md",
+          "薪酬福利说明.md",
+          "薪酬福利说明.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "入职与离职管理流程.md",
+          "病假和医疗期规定.md",
+          "考勤政策.md",
+          "请假审批流程.md",
+          "绩效考核制度.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "入职与离职管理流程.md",
+          "请假审批流程.md",
+          "考勤政策.md",
+          "薪酬福利说明.md",
+          "入职与离职管理流程.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_007",
+      "query": "电脑黑屏开不了机怎么办？",
+      "agent": "it_agent",
+      "expected_sources": [
+        "报修指南.md"
+      ],
+      "vector": {
+        "sources": [
+          "报修指南.md",
+          "报修指南.md",
+          "报修指南.md",
+          "报修指南.md",
+          "报修指南.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "报修指南.md",
+          "密码和账号管理.md",
+          "报修指南.md",
+          "远程办公IT指南.md",
+          "数据备份与恢复规范.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "报修指南.md",
+          "报修指南.md",
+          "报修指南.md",
+          "密码和账号管理.md",
+          "报修指南.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_008",
+      "query": "邮箱密码忘了怎么找回来？",
+      "agent": "it_agent",
+      "expected_sources": [
+        "密码和账号管理.md"
+      ],
+      "vector": {
+        "sources": [
+          "密码和账号管理.md",
+          "密码和账号管理.md",
+          "数据备份与恢复规范.md",
+          "密码和账号管理.md",
+          "密码和账号管理.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "密码和账号管理.md",
+          "密码和账号管理.md",
+          "网络和VPN配置.md",
+          "密码和账号管理.md",
+          "密码和账号管理.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "密码和账号管理.md",
+          "密码和账号管理.md",
+          "网络和VPN配置.md",
+          "密码和账号管理.md",
+          "密码和账号管理.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_009",
+      "query": "想装一个画图软件怎么申请？",
+      "agent": "it_agent",
+      "expected_sources": [
+        "软件安装申请.md"
+      ],
+      "vector": {
+        "sources": [
+          "软件安装申请.md",
+          "软件安装申请.md",
+          "软件安装申请.md",
+          "软件安装申请.md",
+          "设备申领流程.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "软件安装申请.md",
+          "数据备份与恢复规范.md",
+          "软件安装申请.md",
+          "报修指南.md",
+          "数据备份与恢复规范.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "软件安装申请.md",
+          "软件安装申请.md",
+          "软件安装申请.md",
+          "数据备份与恢复规范.md",
+          "软件安装申请.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_010",
+      "query": "家里网络连不上怎么办？",
+      "agent": "it_agent",
+      "expected_sources": [
+        "网络和VPN配置.md"
+      ],
+      "vector": {
+        "sources": [
+          "网络和VPN配置.md",
+          "网络和VPN配置.md",
+          "网络和VPN配置.md",
+          "网络和VPN配置.md",
+          "网络和VPN配置.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "网络和VPN配置.md",
+          "网络和VPN配置.md",
+          "网络和VPN配置.md",
+          "网络和VPN配置.md",
+          "软件安装申请.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "网络和VPN配置.md",
+          "网络和VPN配置.md",
+          "网络和VPN配置.md",
+          "网络和VPN配置.md",
+          "软件安装申请.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_011",
+      "query": "申请一台新电脑走什么流程？",
+      "agent": "it_agent",
+      "expected_sources": [
+        "设备申领流程.md"
+      ],
+      "vector": {
+        "sources": [
+          "设备申领流程.md",
+          "设备申领流程.md",
+          "设备申领流程.md",
+          "设备申领流程.md",
+          "设备申领流程.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "软件安装申请.md",
+          "设备申领流程.md",
+          "设备申领流程.md",
+          "数据备份与恢复规范.md",
+          "设备申领流程.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "设备申领流程.md",
+          "设备申领流程.md",
+          "设备申领流程.md",
+          "设备申领流程.md",
+          "设备申领流程.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_012",
+      "query": "误删的文件还能恢复吗？",
+      "agent": "it_agent",
+      "expected_sources": [
+        "数据备份与恢复规范.md"
+      ],
+      "vector": {
+        "sources": [
+          "数据备份与恢复规范.md",
+          "数据备份与恢复规范.md",
+          "数据备份与恢复规范.md",
+          "设备申领流程.md",
+          "软件安装申请.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "数据备份与恢复规范.md",
+          "密码和账号管理.md",
+          "设备申领流程.md",
+          "报修指南.md",
+          "数据备份与恢复规范.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "数据备份与恢复规范.md",
+          "数据备份与恢复规范.md",
+          "密码和账号管理.md",
+          "数据备份与恢复规范.md",
+          "软件安装申请.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_013",
+      "query": "签了保密协议，跳槽要注意什么？",
+      "agent": "legal_agent",
+      "expected_sources": [
+        "保密协议说明.md"
+      ],
+      "vector": {
+        "sources": [
+          "保密协议说明.md",
+          "保密协议说明.md",
+          "保密协议说明.md",
+          "知识产权政策.md",
+          "保密协议说明.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "保密协议说明.md",
+          "保密协议说明.md",
+          "保密协议说明.md",
+          "保密协议说明.md",
+          "保密协议说明.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "保密协议说明.md",
+          "保密协议说明.md",
+          "保密协议说明.md",
+          "保密协议说明.md",
+          "保密协议说明.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_014",
+      "query": "客户信息能随便发给外面的人吗？",
+      "agent": "legal_agent",
+      "expected_sources": [
+        "数据保护条例.md"
+      ],
+      "vector": {
+        "sources": [
+          "数据保护条例.md",
+          "数据保护条例.md",
+          "数据保护条例.md",
+          "合规检查清单.md",
+          "数据保护条例.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "劳动合同管理办法.md",
+          "知识产权政策.md",
+          "员工纪律处分条例.md",
+          "知识产权政策.md",
+          "保密协议说明.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "数据保护条例.md",
+          "保密协议说明.md",
+          "劳动合同管理办法.md",
+          "数据保护条例.md",
+          "知识产权政策.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_015",
+      "query": "合同签字前要检查什么？",
+      "agent": "legal_agent",
+      "expected_sources": [
+        "合同审批流程.md"
+      ],
+      "vector": {
+        "sources": [
+          "合同审批流程.md",
+          "合同审批流程.md",
+          "合同审批流程.md",
+          "合同审批流程.md",
+          "合同审批流程.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "合同审批流程.md",
+          "合同审批流程.md",
+          "合同审批流程.md",
+          "合同审批流程.md",
+          "合同审批流程.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "合同审批流程.md",
+          "合同审批流程.md",
+          "合同审批流程.md",
+          "合同审批流程.md",
+          "合同审批流程.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_016",
+      "query": "公司监控员工电脑合法吗？",
+      "agent": "legal_agent",
+      "expected_sources": [
+        "数据保护条例.md"
+      ],
+      "vector": {
+        "sources": [
+          "保密协议说明.md",
+          "合规检查清单.md",
+          "合规检查清单.md",
+          "数据保护条例.md",
+          "保密协议说明.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "数据保护条例.md",
+          "数据保护条例.md",
+          "合规检查清单.md",
+          "数据保护条例.md",
+          "数据保护条例.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "数据保护条例.md",
+          "数据保护条例.md",
+          "合规检查清单.md",
+          "数据保护条例.md",
+          "数据保护条例.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_017",
+      "query": "打车发票能报销吗？",
+      "agent": "finance_agent",
+      "expected_sources": [
+        "报销管理制度.md"
+      ],
+      "vector": {
+        "sources": [
+          "报销管理制度.md",
+          "报销管理制度.md",
+          "报销管理制度.md",
+          "出差管理制度.md",
+          "报销管理制度.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "报销管理制度.md",
+          "报销管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "报销管理制度.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "报销管理制度.md",
+          "报销管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "报销管理制度.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_018",
+      "query": "出差住酒店每晚多少钱？",
+      "agent": "finance_agent",
+      "expected_sources": [
+        "出差管理制度.md"
+      ],
+      "vector": {
+        "sources": [
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_019",
+      "query": "工资的个税是怎么算的？",
+      "agent": "finance_agent",
+      "expected_sources": [
+        "薪资结构说明.md"
+      ],
+      "vector": {
+        "sources": [
+          "薪资结构说明.md",
+          "薪资结构说明.md",
+          "薪资结构说明.md",
+          "薪资结构说明.md",
+          "报销管理制度.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "出差管理制度.md",
+          "薪资结构说明.md",
+          "薪资结构说明.md",
+          "采购流程规范.md",
+          "薪资结构说明.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "薪资结构说明.md",
+          "薪资结构说明.md",
+          "薪资结构说明.md",
+          "报销管理制度.md",
+          "报销管理制度.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_020",
+      "query": "部门预算不够用了怎么办？",
+      "agent": "finance_agent",
+      "expected_sources": [
+        "预算管理制度.md"
+      ],
+      "vector": {
+        "sources": [
+          "预算管理制度.md",
+          "预算管理制度.md",
+          "预算管理制度.md",
+          "采购流程规范.md",
+          "报销管理制度.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "预算管理制度.md",
+          "预算管理制度.md",
+          "预算管理制度.md",
+          "出差管理制度.md",
+          "报销管理制度.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "预算管理制度.md",
+          "预算管理制度.md",
+          "预算管理制度.md",
+          "出差管理制度.md",
+          "报销管理制度.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_021",
+      "query": "离职补偿金怎么算？",
+      "agent": "hr_agent",
+      "expected_sources": [
+        "入职与离职管理流程.md"
+      ],
+      "vector": {
+        "sources": [
+          "年假管理制度.md",
+          "入职与离职管理流程.md",
+          "薪酬福利说明.md",
+          "薪酬福利说明.md",
+          "薪酬福利说明.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "绩效考核制度.md",
+          "考勤政策.md",
+          "请假审批流程.md",
+          "入职与离职管理流程.md",
+          "薪酬福利说明.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "入职与离职管理流程.md",
+          "薪酬福利说明.md",
+          "年假管理制度.md",
+          "年假管理制度.md",
+          "绩效考核制度.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_022",
+      "query": "请病假需要医院证明吗？",
+      "agent": "hr_agent",
+      "expected_sources": [
+        "病假和医疗期规定.md"
+      ],
+      "vector": {
+        "sources": [
+          "病假和医疗期规定.md",
+          "病假和医疗期规定.md",
+          "病假和医疗期规定.md",
+          "病假和医疗期规定.md",
+          "请假审批流程.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "病假和医疗期规定.md",
+          "病假和医疗期规定.md",
+          "病假和医疗期规定.md",
+          "病假和医疗期规定.md",
+          "病假和医疗期规定.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "病假和医疗期规定.md",
+          "病假和医疗期规定.md",
+          "病假和医疗期规定.md",
+          "病假和医疗期规定.md",
+          "病假和医疗期规定.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_023",
+      "query": "电脑卡顿找谁处理？",
+      "agent": "it_agent",
+      "expected_sources": [
+        "报修指南.md"
+      ],
+      "vector": {
+        "sources": [
+          "网络和VPN配置.md",
+          "报修指南.md",
+          "报修指南.md",
+          "报修指南.md",
+          "软件安装申请.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "报修指南.md",
+          "网络和VPN配置.md",
+          "网络和VPN配置.md",
+          "网络和VPN配置.md",
+          "密码和账号管理.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "报修指南.md",
+          "网络和VPN配置.md",
+          "网络和VPN配置.md",
+          "网络和VPN配置.md",
+          "密码和账号管理.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_024",
+      "query": "竞业协议离职后还有效吗？",
+      "agent": "legal_agent",
+      "expected_sources": [
+        "保密协议说明.md"
+      ],
+      "vector": {
+        "sources": [
+          "知识产权政策.md",
+          "保密协议说明.md",
+          "保密协议说明.md",
+          "保密协议说明.md",
+          "保密协议说明.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "员工纪律处分条例.md",
+          "保密协议说明.md",
+          "劳动合同管理办法.md",
+          "知识产权政策.md",
+          "知识产权政策.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "保密协议说明.md",
+          "知识产权政策.md",
+          "保密协议说明.md",
+          "劳动合同管理办法.md",
+          "保密协议说明.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_025",
+      "query": "员工信息泄露了要上报吗？",
+      "agent": "legal_agent",
+      "expected_sources": [
+        "数据保护条例.md"
+      ],
+      "vector": {
+        "sources": [
+          "数据保护条例.md",
+          "保密协议说明.md",
+          "保密协议说明.md",
+          "数据保护条例.md",
+          "数据保护条例.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "保密协议说明.md",
+          "数据保护条例.md",
+          "员工纪律处分条例.md",
+          "保密协议说明.md",
+          "数据保护条例.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "保密协议说明.md",
+          "数据保护条例.md",
+          "员工纪律处分条例.md",
+          "保密协议说明.md",
+          "数据保护条例.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_026",
+      "query": "预算超支了怎么办？",
+      "agent": "finance_agent",
+      "expected_sources": [
+        "预算管理制度.md"
+      ],
+      "vector": {
+        "sources": [
+          "预算管理制度.md",
+          "预算管理制度.md",
+          "预算管理制度.md",
+          "报销管理制度.md",
+          "报销管理制度.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "预算管理制度.md",
+          "预算管理制度.md",
+          "预算管理制度.md",
+          "出差管理制度.md",
+          "报销管理制度.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "预算管理制度.md",
+          "预算管理制度.md",
+          "预算管理制度.md",
+          "出差管理制度.md",
+          "报销管理制度.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_027",
+      "query": "软件授权到期了怎么办？",
+      "agent": "it_agent",
+      "expected_sources": [
+        "软件安装申请.md"
+      ],
+      "vector": {
+        "sources": [
+          "软件安装申请.md",
+          "软件安装申请.md",
+          "软件安装申请.md",
+          "软件安装申请.md",
+          "设备申领流程.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "密码和账号管理.md",
+          "软件安装申请.md",
+          "数据备份与恢复规范.md",
+          "软件安装申请.md",
+          "报修指南.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "软件安装申请.md",
+          "密码和账号管理.md",
+          "软件安装申请.md",
+          "软件安装申请.md",
+          "软件安装申请.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_028",
+      "query": "离职要交接哪些东西？",
+      "agent": "hr_agent",
+      "expected_sources": [
+        "入职与离职管理流程.md"
+      ],
+      "vector": {
+        "sources": [
+          "入职与离职管理流程.md",
+          "入职与离职管理流程.md",
+          "入职与离职管理流程.md",
+          "薪酬福利说明.md",
+          "年假管理制度.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "入职与离职管理流程.md",
+          "入职与离职管理流程.md",
+          "入职与离职管理流程.md",
+          "年假管理制度.md",
+          "薪酬福利说明.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "入职与离职管理流程.md",
+          "入职与离职管理流程.md",
+          "入职与离职管理流程.md",
+          "薪酬福利说明.md",
+          "年假管理制度.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_029",
+      "query": "休年假要提前几天申请？",
+      "agent": "hr_agent",
+      "expected_sources": [
+        "年假管理制度.md"
+      ],
+      "vector": {
+        "sources": [
+          "年假管理制度.md",
+          "年假管理制度.md",
+          "年假管理制度.md",
+          "年假管理制度.md",
+          "病假和医疗期规定.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "年假管理制度.md",
+          "年假管理制度.md",
+          "年假管理制度.md",
+          "年假管理制度.md",
+          "年假管理制度.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "年假管理制度.md",
+          "年假管理制度.md",
+          "年假管理制度.md",
+          "年假管理制度.md",
+          "年假管理制度.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_030",
+      "query": "出差补助每天多少？",
+      "agent": "finance_agent",
+      "expected_sources": [
+        "出差管理制度.md"
+      ],
+      "vector": {
+        "sources": [
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_031",
+      "query": "报销要提供什么单据？",
+      "agent": "finance_agent",
+      "expected_sources": [
+        "报销管理制度.md"
+      ],
+      "vector": {
+        "sources": [
+          "报销管理制度.md",
+          "报销管理制度.md",
+          "报销管理制度.md",
+          "报销管理制度.md",
+          "报销管理制度.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "报销管理制度.md",
+          "报销管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "报销管理制度.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "报销管理制度.md",
+          "报销管理制度.md",
+          "出差管理制度.md",
+          "出差管理制度.md",
+          "报销管理制度.md"
+        ],
+        "hit": true
+      }
+    },
+    {
+      "id": "hard_032",
+      "query": "密码多久换一次？",
+      "agent": "it_agent",
+      "expected_sources": [
+        "密码和账号管理.md"
+      ],
+      "vector": {
+        "sources": [
+          "密码和账号管理.md",
+          "密码和账号管理.md",
+          "密码和账号管理.md",
+          "密码和账号管理.md",
+          "密码和账号管理.md"
+        ],
+        "hit": true
+      },
+      "bm25": {
+        "sources": [
+          "密码和账号管理.md",
+          "密码和账号管理.md",
+          "网络和VPN配置.md",
+          "密码和账号管理.md",
+          "密码和账号管理.md"
+        ],
+        "hit": true
+      },
+      "hybrid": {
+        "sources": [
+          "密码和账号管理.md",
+          "密码和账号管理.md",
+          "网络和VPN配置.md",
+          "密码和账号管理.md",
+          "密码和账号管理.md"
+        ],
+        "hit": true
+      }
+    }
+  ]
+}
