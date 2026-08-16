@@ -27,7 +27,7 @@ EXPERT_REGISTRY: dict[str, ExpertProfile] = {
     "hr_agent": ExpertProfile("hr_agent", "HR 专家", "hr", ("hr_policy_kb", "hris_leave")),
     "it_agent": ExpertProfile("it_agent", "IT 专家", "it", ("it_policy_kb", "itsm_ticket")),
     "legal_agent": ExpertProfile("legal_agent", "法务专家", "legal", ("legal_policy_kb", "contract_service")),
-    "finance_agent": ExpertProfile("finance_agent", "财务专家", "finance", ("finance_policy_kb", "expense_service")),
+    "finance_agent": ExpertProfile("finance_agent", "财务专家", "finance", ("finance_policy_kb", "expense_service", "payroll_service")),
 }
 
 # 旧 ToolDef 到新资源模型的显式适配。未登记工具默认拒绝。

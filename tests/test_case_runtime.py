@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from src.collaboration.runtime import CaseRuntime
+from src.collaboration.case_manager import CollaborationMode
 
 
 class CaseRuntimeTests(unittest.TestCase):
@@ -44,6 +45,18 @@ class CaseRuntimeTests(unittest.TestCase):
 
         transition.assert_called_once_with("case-1", "blocked", "EMP001")
         self.assertEqual("case_blocked", active.workspace.audit_events[0]["event"])
+
+    def test_runtime_plans_handoff_mode_for_single_expert_with_trigger(self):
+        runtime = CaseRuntime()
+        active = runtime.start(
+            fallback_case_id="session-h", goal="补充 IT 故障信息",
+            route_result={"primary": "it_agent", "secondary": None, "handoff_trigger": True},
+            requires_confirmation=True,
+        )
+        self.assertEqual(CollaborationMode.HANDOFF, active.plan.mode)
+        self.assertTrue(active.plan.tasks[0].key.startswith("handoff_"))
+        # trace 视图把 mode 透传给前端调用方
+        self.assertEqual("handoff", runtime.trace_view(active)["mode"])
 
 
 if __name__ == "__main__":

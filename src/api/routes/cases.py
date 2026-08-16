@@ -10,10 +10,13 @@ from pydantic import BaseModel, Field
 
 from src.collaboration.case_service import (
     approve_and_execute_mock_proposal,
+    block_offboarding_for_missing_asset,
+    complete_asset_reclaim,
     create_case,
     confirm_proposal,
     get_case,
     list_cases,
+    prepare_offboarding,
     prepare_onboarding,
     transition_case,
     transition_task,
@@ -42,6 +45,11 @@ class OnboardingDetailsRequest(BaseModel):
     department: str | None = Field(default=None, max_length=80)
 
 
+class OffboardingDetailsRequest(BaseModel):
+    last_workday: str = Field(..., min_length=10, max_length=10)
+    reason: str = Field(..., min_length=2, max_length=200)
+
+
 def _session(request: Request) -> SessionContext | None:
     return getattr(request.state, "session", None)
 
@@ -61,7 +69,7 @@ def _case_for_employee(case: dict[str, Any]) -> dict[str, Any]:
     case = dict(case)
     case["context"] = {
         key: value for key, value in case.get("context", {}).items()
-        if key in {"department", "role", "start_date", "position"}
+        if key in {"department", "role", "start_date", "position", "last_workday", "reason"}
     }
     case["artifacts"] = [
         artifact for artifact in case.get("artifacts", [])
@@ -95,7 +103,7 @@ async def create_case_endpoint(body: CreateCaseRequest, request: Request):
     template = get_template(body.template_id)
     if template is None:
         return JSONResponse(status_code=400, content={"error": "未知的 Case 模板"})
-    safe_context = {key: value for key, value in body.context.items() if key in {"department", "role", "start_date", "position"}}
+    safe_context = {key: value for key, value in body.context.items() if key in {"department", "role", "start_date", "position", "last_workday", "reason"}}
     case = create_case(
         owner_user_id=session.user_id,
         template_id=template.template_id,
@@ -190,6 +198,50 @@ async def prepare_onboarding_endpoint(case_id: str, body: OnboardingDetailsReque
     try:
         return {"case": _case_for_employee(prepare_onboarding(case_id, session.user_id, body.model_dump()))}
     except ValueError as exc:
+        return JSONResponse(status_code=400, content={"error": str(exc)})
+
+
+@router.post("/cases/{case_id}/offboarding/prepare")
+async def prepare_offboarding_endpoint(case_id: str, body: OffboardingDetailsRequest, request: Request):
+    session = _session(request)
+    if session is None:
+        return JSONResponse(status_code=401, content={"error": "未认证"})
+    case = get_case(case_id)
+    if case is None:
+        return JSONResponse(status_code=404, content={"error": "Case 不存在"})
+    if case["owner_user_id"] != session.user_id and not _is_hr_admin(session):
+        return JSONResponse(status_code=403, content={"error": "只有发起人或 HR 可以确认离职信息"})
+    try:
+        return {"case": _case_for_employee(prepare_offboarding(case_id, session.user_id, body.model_dump()))}
+    except ValueError as exc:
+        return JSONResponse(status_code=400, content={"error": str(exc)})
+
+
+@router.post("/cases/{case_id}/offboarding/asset-fail")
+async def offboarding_asset_fail_endpoint(case_id: str, request: Request):
+    """演示资产回收失败→Case 阻塞：财务结算因依赖未满足而不能进入。"""
+    session = _session(request)
+    if session is None:
+        return JSONResponse(status_code=401, content={"error": "未认证"})
+    if not _is_hr_admin(session):
+        return JSONResponse(status_code=403, content={"error": "只有 HR 或管理员可以发起资产回收失败"})
+    try:
+        return {"case": _case_for_employee(block_offboarding_for_missing_asset(case_id, session.user_id, "笔记本未归还"))}
+    except (KeyError, ValueError) as exc:
+        return JSONResponse(status_code=400, content={"error": str(exc)})
+
+
+@router.post("/cases/{case_id}/offboarding/asset-done")
+async def offboarding_asset_done_endpoint(case_id: str, request: Request):
+    """资产回收完成 → 解锁被其依赖的财务结算任务，并新建结算提案。"""
+    session = _session(request)
+    if session is None:
+        return JSONResponse(status_code=401, content={"error": "未认证"})
+    if not _is_hr_admin(session):
+        return JSONResponse(status_code=403, content={"error": "只有 HR 或管理员可以确认资产回收"})
+    try:
+        return {"case": _case_for_employee(complete_asset_reclaim(case_id, session.user_id, closed=True))}
+    except (KeyError, ValueError) as exc:
         return JSONResponse(status_code=400, content={"error": str(exc)})
 
 

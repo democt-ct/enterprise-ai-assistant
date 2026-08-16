@@ -45,6 +45,26 @@ class CaseManager:
         if not participants:
             raise ValueError("没有已注册的专家可以参与该 Case")
 
+        # HANDOFF：单领域但需要多轮补充资料（如流转给某位专家采集缺失字段、
+        # 保持 Case 上下文后再回到整合）。这是枚举里已定义但此前从未被
+        # plan() 生成的协作模式。
+        handoff_trigger = route_result.get("handoff_trigger") or (
+            requires_confirmation and len(participants) == 1
+        )
+        if len(participants) == 1 and handoff_trigger:
+            agent = participants[0]
+            return CasePlan(
+                mode=CollaborationMode.HANDOFF,
+                participants=participants,
+                tasks=(CaseTaskSpec(
+                    f"handoff_{agent}",
+                    f"{EXPERT_REGISTRY[agent].display_name}补充资料",
+                    EXPERT_REGISTRY[agent].domain,
+                ),),
+                rationale="请求只涉及一个领域但需要向该专家补充资料；进入可恢复的对话交接。",
+                read_only=not requires_confirmation,
+            )
+
         if len(participants) == 1:
             agent = participants[0]
             return CasePlan(

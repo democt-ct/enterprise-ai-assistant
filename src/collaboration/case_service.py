@@ -281,6 +281,153 @@ def approve_and_execute_mock_proposal(case_id: str, proposal_id: str, actor_id: 
     return get_case(case_id) or {}
 
 
+def prepare_offboarding(case_id: str, actor_id: str, details: dict[str, Any]) -> dict[str, Any]:
+    """确认离职结清信息后，逐级生成 IT 资产回收与财务结算的受控提案。
+
+    与入职不同的是，离职采用严格链式依赖：财务结算任务 `finance_settlement`
+    依赖 `it_offboarding`，因此必须先完成资产回收 / 权限回收才能结算，突出
+    depends_on 深度 > 1 的多跳调度。
+    """
+    required = ("last_workday", "reason")
+    missing = [key for key in required if not str(details.get(key, "")).strip()]
+    if missing:
+        raise ValueError("缺少离职信息：" + "、".join(missing))
+
+    with get_db() as conn:
+        case = conn.execute("SELECT * FROM cases WHERE id = ?", (case_id,)).fetchone()
+        if case is None or case["template_id"] != "employee_offboarding":
+            raise ValueError("该 Case 不是离职协同事项")
+        if case["status"] != "planned":
+            raise ValueError("离职资料只能在计划阶段确认")
+        tasks = {row["task_key"]: dict(row) for row in conn.execute("SELECT * FROM case_tasks WHERE case_id = ?", (case_id,))}
+        if "hr_clearance" not in tasks:
+            raise ValueError("离职任务图不完整")
+
+        context = _loads(case["context_json"], {})
+        context.update({key: details[key] for key in ("last_workday", "reason") if details.get(key)})
+        conn.execute("UPDATE cases SET context_json = ?, status = 'coordinating', updated_at = ? WHERE id = ?", (_json(context), _now(), case_id))
+        conn.execute("UPDATE case_tasks SET status = 'completed', updated_at = ? WHERE id = ?", (_now(), tasks["hr_clearance"]["id"]))
+        _event(conn, case_id, "offboarding_clearance_confirmed", actor_id, last_workday=context["last_workday"])
+
+        _insert_artifact(conn, case_id, tasks["hr_clearance"]["id"], "hr_agent", "team", {
+            "summary": "离职结清信息已确认，已启动资产回收与结算协同。",
+            "facts": [f"最后工作日：{context['last_workday']}", f"离职原因：{context['reason']}"],
+        }, [], _now())
+
+        # IT 资产回收入口先就绪；财务结算任务被 it_offboarding 依赖，
+        # 在资产回收完成前不会进入 in_progress（create_case 已置 waiting_dependency；
+        # 此处仅对法律义务确认任务与资产回收生成提案）。
+        if "it_offboarding" in tasks:
+            conn.execute("UPDATE case_tasks SET status = 'waiting_approval', updated_at = ? WHERE id = ?", (_now(), tasks["it_offboarding"]["id"]))
+            it_proposal = OperationProposal(
+                resource_id="itsm_ticket", action="reclaim_assets",
+                summary="回收设备与回收权限", parameters={"last_workday": context["last_workday"]},
+            )
+            _insert_artifact(conn, case_id, tasks["it_offboarding"]["id"], "it_agent", "team",
+                {"summary": "已形成 IT 资产回收操作提案", "facts": [], "recommendations": ["等待资产回收审批执行"]},
+                [it_proposal], _now())
+
+        if "legal_clearance" in tasks:
+            conn.execute("UPDATE case_tasks SET status = 'waiting_approval', updated_at = ? WHERE id = ?", (_now(), tasks["legal_clearance"]["id"]))
+            legal_proposal = OperationProposal(
+                resource_id="contract_service", action="confirm_offboarding_obligations",
+                summary="确认保密与竞业义务签署",
+            )
+            _insert_artifact(conn, case_id, tasks["legal_clearance"]["id"], "legal_agent", "team",
+                {"summary": "已形成离职义务确认提案", "facts": [], "recommendations": ["等待法务义务确认审批"]},
+                [legal_proposal], _now())
+
+        # 财务结算待资产回收完成后再由 approve 链路推进
+        _event(conn, case_id, "offboarding_proposals_created", "system", proposal_count=2, finance_gated_by="it_offboarding")
+        conn.commit()
+    return get_case(case_id) or {}
+
+
+def recover_offboarding(case_id: str, actor_id: str) -> dict[str, Any]:
+    """资产回收失败后的恢复入口：允许从 blocked 回到 coordinating 重新推进。"""
+    with get_db() as conn:
+        case = conn.execute("SELECT * FROM cases WHERE id = ?", (case_id,)).fetchone()
+        if case is None:
+            raise KeyError("Case 不存在")
+        if case["status"] != "blocked":
+            raise ValueError("只有阻塞中的离职 Case 可以恢复")
+        block_target = _now()
+        conn.execute("UPDATE cases SET status = 'coordinating', updated_at = ? WHERE id = ?", (block_target, case_id))
+        _event(conn, case_id, "offboarding_recovered", actor_id)
+        conn.commit()
+    return get_case(case_id) or {}
+
+
+def block_offboarding_for_missing_asset(case_id: str, actor_id: str, reason: str) -> dict[str, Any]:
+    """模拟资产回收失败：把 IT 任务与 Case 置为 blocked。
+
+    财务结算任务被 it_offboarding 依赖，因此在资产回收未完成前不能进入结算；
+    这一失败把 Case 整体阻塞而不是返回半成品结论，符合"失败边界"主张。
+    """
+    with get_db() as conn:
+        case = conn.execute("SELECT * FROM cases WHERE id = ?", (case_id,)).fetchone()
+        if case is None or case["template_id"] != "employee_offboarding":
+            raise ValueError("该 Case 不是离职协同事项")
+        it_task = conn.execute(
+            "SELECT * FROM case_tasks WHERE case_id = ? AND task_key = 'it_offboarding'",
+            (case_id,),
+        ).fetchone()
+        if it_task is None:
+            raise ValueError("离职任务图缺少资产回收任务")
+        if it_task["status"] not in {"in_progress", "waiting_approval"}:
+            raise ValueError("资产回收任务当前不可置为失败")
+        now = _now()
+        conn.execute("UPDATE case_tasks SET status = 'blocked', updated_at = ? WHERE id = ?", (now, it_task["id"]))
+        conn.execute("UPDATE cases SET status = 'blocked', updated_at = ? WHERE id = ?", (now, case_id))
+        _event(conn, case_id, "offboarding_asset_reclaim_failed", actor_id, reason=reason, task_id=it_task["id"])
+        conn.commit()
+    return get_case(case_id) or {}
+
+
+def complete_asset_reclaim(case_id: str, actor_id: str, closed: bool = False) -> dict[str, Any]:
+    """资产回收完成 → 自动解锁并启动被其依赖的财务结算任务。
+
+    这是严格链式依赖的直接证据：完成 it_offboarding 后，等待它的
+    finance_settlement 从 waiting_dependency 进入可执行状态。
+    """
+    with get_db() as conn:
+        case = conn.execute("SELECT * FROM cases WHERE id = ?", (case_id,)).fetchone()
+        if case is None or case["template_id"] != "employee_offboarding":
+            raise ValueError("该 Case 不是离职协同事项")
+        it_task = conn.execute(
+            "SELECT * FROM case_tasks WHERE case_id = ? AND task_key = 'it_offboarding'",
+            (case_id,),
+        ).fetchone()
+        if it_task is None:
+            raise ValueError("离职任务图缺少资产回收任务")
+        if it_task["status"] != "blocked":
+            raise ValueError("资产回收任务不在失败态，无需恢复")
+        if not closed:
+            raise ValueError("资产尚未归还，无法完成回收")
+        finance_task = conn.execute(
+            "SELECT * FROM case_tasks WHERE case_id = ? AND task_key = 'finance_settlement'",
+            (case_id,),
+        ).fetchone()
+        now = _now()
+        conn.execute("UPDATE case_tasks SET status = 'completed', updated_at = ? WHERE id = ?", (now, it_task["id"]))
+        if finance_task is not None:
+            # 依赖已满足：允许财务从 waiting_dependency → in_progress → 生成结算提案
+            conn.execute("UPDATE case_tasks SET status = 'in_progress', updated_at = ? WHERE id = ?", (now, finance_task["id"]))
+            finance_proposal = OperationProposal(
+                resource_id="payroll_service", action="settle_payroll",
+                summary="结算离职薪资与未报销费用",
+            )
+            _insert_artifact(conn, case_id, finance_task["id"], "finance_agent", "team",
+                {"summary": "资产已回收，启动离职薪资结算", "facts": [], "recommendations": ["等待结算审批执行"]},
+                [finance_proposal], now)
+        if case["status"] == "blocked":
+            conn.execute("UPDATE cases SET status = 'coordinating', updated_at = ? WHERE id = ?", (now, case_id))
+            _event(conn, case_id, "offboarding_recovered", actor_id)
+        _event(conn, case_id, "offboarding_asset_reclaimed", actor_id, task_id=it_task["id"])
+        conn.commit()
+    return get_case(case_id) or {}
+
+
 def _dependencies_completed(conn: Any, case_id: str, task_keys: list[str]) -> bool:
     if not task_keys:
         return True

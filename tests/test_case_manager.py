@@ -20,6 +20,19 @@ class CaseManagerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             CaseManager().plan({"primary": "unknown_agent", "secondary": None})
 
+    def test_single_expert_with_handoff_trigger_uses_handoff_mode(self):
+        plan = CaseManager().plan(
+            {"primary": "it_agent", "secondary": None, "handoff_trigger": True},
+            requires_confirmation=True,
+        )
+        self.assertEqual(CollaborationMode.HANDOFF, plan.mode)
+        self.assertEqual(("it_agent",), plan.participants)
+        self.assertTrue(plan.tasks[0].key.startswith("handoff_"))
+
+    def test_single_expert_without_handoff_trigger_stays_single_expert(self):
+        plan = CaseManager().plan({"primary": "it_agent", "secondary": None})
+        self.assertEqual(CollaborationMode.SINGLE_EXPERT, plan.mode)
+
     def test_expert_can_propose_but_never_execute_registered_write(self):
         self.assertTrue(resource_access_allowed("it_agent", "itsm_ticket", AccessMode.PROPOSE_WRITE))
         self.assertFalse(resource_access_allowed("it_agent", "itsm_ticket", AccessMode.EXECUTE_WRITE))

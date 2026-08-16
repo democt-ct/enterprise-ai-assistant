@@ -31,6 +31,23 @@ ONBOARDING_TEMPLATE = CaseTemplate(
     ),
 )
 
+OFFBOARDING_TEMPLATE = CaseTemplate(
+    template_id="employee_offboarding",
+    title="员工离职协同",
+    description=(
+        "离职结清：逐级推进财务结算与 IT 资产回收，出现未归还资产时阻塞并要求恢复，"
+        "不直接产出半成品结论。"
+    ),
+    task_specs=(
+        # 严格线性链式依赖：每一级任务都受上一级产物 gate，证明任务图引擎能处理
+        # depends_on 深度 > 1 的多跳调度，而非只在单层并行。
+        CaseTaskSpec("hr_clearance", "确认离职结清信息", "hr"),
+        CaseTaskSpec("it_offboarding", "回收设备与权限", "it", ("hr_clearance",)),
+        CaseTaskSpec("finance_settlement", "结算薪资与费用", "finance", ("it_offboarding",)),
+        CaseTaskSpec("legal_clearance", "确认保密与竞业义务", "legal", ("hr_clearance",)),
+    ),
+)
+
 AD_HOC_TEMPLATE = CaseTemplate(
     template_id="cross_domain_consultation",
     title="跨部门事务研判",
@@ -38,7 +55,10 @@ AD_HOC_TEMPLATE = CaseTemplate(
     task_specs=(),
 )
 
-_TEMPLATES = {template.template_id: template for template in (ONBOARDING_TEMPLATE, AD_HOC_TEMPLATE)}
+_TEMPLATES = {
+    template.template_id: template
+    for template in (ONBOARDING_TEMPLATE, OFFBOARDING_TEMPLATE, AD_HOC_TEMPLATE)
+}
 
 
 def get_template(template_id: str) -> CaseTemplate | None:

@@ -9,7 +9,7 @@ from src.api.service.chat_service import chat
 from src.collaboration.contracts import ExpertArtifact, ShareScope
 from src.collaboration.workspace import TaskWorkspace
 from src.workflow.engine import WorkflowEngine
-from src.workflow.request_classifier import ExecutionMode, classify_request
+from src.workflow.request_classifier import ExecutionMode, classify_request, complexity_score
 
 
 class StubOrchestrator:
@@ -85,7 +85,66 @@ class RequestClassifierTests(unittest.TestCase):
         self.assertTrue(decision.requires_confirmation)
 
 
+class ComplexityScoreTests(unittest.TestCase):
+    def test_simple_read_only_query_scores_low(self):
+        score = complexity_score(
+            "查一下年假还剩几天",
+            {"primary": "hr_agent", "secondary": None, "method": "keyword", "action_card": None},
+        )
+        self.assertGreaterEqual(0.30, score)
+
+    def test_cross_domain_write_scores_high_and_picks_collaboration(self):
+        decision = classify_request(
+            "申请请假，同时帮我报修电脑",
+            {"primary": "hr_agent", "secondary": "it_agent", "method": "keyword", "action_card": None},
+        )
+        self.assertEqual(ExecutionMode.COLLABORATION, decision.mode)
+        # 跨域(0.35) + 写意图(0.30) 明确超过单域只读阈值
+        self.assertGreaterEqual(decision.complexity_score, 0.60)
+
+    def test_analysis_query_is_knowledge_and_scores_mid(self):
+        decision = classify_request(
+            "报销流程是什么？",
+            {"primary": "finance_agent", "secondary": None, "method": "keyword", "action_card": None},
+        )
+        self.assertEqual(ExecutionMode.KNOWLEDGE, decision.mode)
+        self.assertGreaterEqual(decision.complexity_score, 0.10)
+
+    def test_decision_exposes_complexity_in_routing_fields(self):
+        decision = classify_request(
+            "帮我提交报销",
+            {"primary": "finance_agent", "secondary": None, "method": "keyword",
+             "action_card": {"type": "expense_form"}},
+        )
+        fields = decision.routing_fields()
+        self.assertEqual("workflow", fields["execution_mode"])
+        self.assertIn("complexity_score", fields)
+
+
 class ChatDispatchTests(unittest.TestCase):
+    def test_handoff_trigger_runs_single_expert_in_case_workspace(self):
+        route = {
+            "primary": "it_agent",
+            "secondary": None,
+            "confidence": 0.7,
+            "method": "keyword",
+            "intent": "action",
+            "action_card": None,
+            "handoff_trigger": True,
+        }
+        agent = StubAgent("it_agent")
+
+        result = chat(
+            "补充 IT 故障信息，我继续说",
+            StubOrchestrator(route),
+            {"it_agent": agent},
+            session_id="handoff-test",
+        )
+
+        self.assertEqual("handoff", result["routing"]["execution_mode"])
+        self.assertEqual("handoff-test", result["collaboration"]["case_id"])
+        self.assertEqual("it_agent", agent.requests[0].agent_name)
+
     def test_registered_workflow_does_not_call_agent(self):
         route = {
             "primary": "finance_agent",

@@ -294,6 +294,49 @@ def chat(
         except Exception:
             pass
 
+    # ── 单领域补充资料 HANDOFF:单专家在 Case 上下文中多轮交接 ────
+    # 用于某个领域需要向用户多轮补充资料（如采集缺失字段）的情况：把对话
+    # 流转给该专家并保持 Case 上下文，而不是只做一次只读回答。
+    if (
+        not secondary
+        and route_result.get("handoff_trigger")
+        and primary in agent_instances
+    ):
+        runtime = CaseRuntime()
+        active_case = runtime.start(
+            fallback_case_id=session_id, goal=raw_query, route_result=route_result,
+            requires_confirmation=decision.requires_confirmation, session_ctx=session_ctx,
+        )
+        expert_context = runtime.expert_context(active_case, primary)
+        response = _run_agent(primary, expert_context, "query")
+        runtime.record_response(active_case, primary, response)
+
+        elapsed = int((time.time() - t0) * 1000)
+        _record_memory(memory, query, response["answer"])
+        result = {
+            "session_id": session_id,
+            "answer": response["answer"],
+            "routing": {
+                **route_result,
+                "execution_mode": "handoff",
+                "handoff": primary,
+                "case_id": active_case.workspace.case_id,
+            },
+            "agent_name": response["agent_name"],
+            "retrieved_chunks": response["retrieved_chunks"],
+            "tool_calls": response["tool_calls"],
+            "reasoning": response.get("reasoning"),
+            "processing_time_ms": elapsed,
+            "tokens_used": response.get("tokens_used", 0),
+            "action_card": action_card,
+            "collaboration": runtime.trace_view(active_case),
+        }
+        _save_conversation(
+            conversation_store, long_term_memory, session_id, query, result,
+            user_id=session_ctx.user_id if session_ctx else "anonymous",
+        )
+        return result
+
     # ── 单领域知识问答:轻量只读路径 ──────────────────────
     if decision.mode is ExecutionMode.KNOWLEDGE:
         query_tool_result = _try_quick_tool(primary, raw_query, session_ctx, agent_instances)
